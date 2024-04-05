@@ -1,0 +1,18 @@
+CREATE TABLE IF NOT EXISTS banners(
+    id INTEGER PRIMARY KEY,
+    content INTEGER,
+    feature_id FOREIGN KEY
+);
+
+CREATE TABLE IF NOT EXISTS tags(
+  id INTEGER PRIMARY KEY,
+    name STRING
+);
+
+CREATE TABLE IF NOT EXISTS revenue(
+  id INTEGER,
+  id_service INTEGER,
+  id_order INTEGER,
+  cost DECIMAL,
+  curr_date DATE NOT NULL DEFAULT CURRENT_DATE
+);
