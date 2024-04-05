@@ -17,12 +17,11 @@ func New(usecase useCase, log logger) *Handler {
 
 	h.Use(gin.Recovery())
 
-	// Swagger
-	//h.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-
-	//api := h.Group("/api")
-	h.GET("/user_banner", h.userBanner)
-	//api.GET("products/get", h.getProducts)
+	h.GET("/user_banner", h.getUserBanner)
+	h.GET("/banner", h.getBanner)
+	h.POST("/banner", h.createBanner)
+	h.PATCH("/banner/{id}", h.updateBanner)
+	h.DELETE("/banner/{id}", h.deleteBanner)
 
 	return h
 

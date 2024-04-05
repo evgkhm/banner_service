@@ -16,5 +16,6 @@ CREATE TABLE IF NOT EXISTS feature(
 
 CREATE TABLE IF NOT EXISTS banner_tag(
     banner_id BIGSERIAL NOT NULL REFERENCES banner(id),
-    tag_id BIGSERIAL NOT NULL NOT NULL REFERENCES tag(id)
+    tag_id BIGSERIAL NOT NULL NOT NULL REFERENCES tag(id),
+    PRIMARY KEY(banner_id, tag_id)
 );

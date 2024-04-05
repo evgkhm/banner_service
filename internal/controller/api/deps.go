@@ -6,7 +6,7 @@ import (
 )
 
 type useCase interface {
-	GetProducts(ctx context.Context, page int, limit int, sortOrder string) ([]entity.Product, error)
+	GetUserBanner(ctx context.Context, userBanner *entity.UserBannerRequest) (entity.UserBannerResponse, error)
 }
 
 type logger interface {
