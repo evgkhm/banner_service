@@ -1,5 +1,37 @@
 package main
 
-func main() {
+import (
+	"banner_service/internal/config"
+	"banner_service/internal/repository/postgres"
+	"banner_service/internal/usecase"
+	"banner_service/pkg/logging"
+	"context"
+	"log"
+)
 
+func main() {
+	cfg, err := config.NewConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	logger, err := logging.New(cfg.Logger.LogFilePath, cfg.Logger.Level)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() { _ = logger.Sync() }()
+
+	ctx := context.Background()
+	db, err := postgres.NewDB(ctx, cfg.PG)
+	if err != nil {
+		logger.Fatalf("failed to connect to postgres db: %s", err)
+	}
+	defer db.Close()
+
+	repo := postgres.New(db.Pool)
+
+	usecase := usecase.New(repo)
+
+	logger.Info("Starting api server...")
+	handler :=
 }
