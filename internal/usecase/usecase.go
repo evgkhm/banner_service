@@ -3,6 +3,7 @@ package usecase
 import (
 	"banner_service/internal/entity"
 	"context"
+	"fmt"
 )
 
 type UseCase struct {
@@ -21,4 +22,12 @@ func (s *UseCase) GetUserBanner(ctx context.Context, userBanner *entity.UserBann
 		return entity.UserBannerResponse{}, err
 	}
 	return userBannerResponse, nil
+}
+
+func (s *UseCase) CreateBanner(ctx context.Context, banner *entity.Banner) (uint64, error) {
+	bannerID, err := s.repo.CreateBanner(ctx, banner)
+	if err != nil {
+		return 0, fmt.Errorf("can't create banner: %w", err)
+	}
+	return bannerID, err
 }

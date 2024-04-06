@@ -3,7 +3,6 @@ package postgres
 import (
 	"banner_service/internal/entity"
 	"context"
-	"fmt"
 	"github.com/jmoiron/sqlx"
 	"time"
 )
@@ -35,45 +34,63 @@ func (r *Repo) GetUserBanner(ctx context.Context, userBanner *entity.UserBannerR
 	return entity.UserBannerResponse{}, nil
 }
 
-func (r *Repo) CreateBanner(ctx context.Context, banner *entity.Banner) error {
+func (r *Repo) CreateBanner(ctx context.Context, banner *entity.Banner) (uint64, error) {
 	now := time.Now()
 	var newID uint64
-	// pool insert with returning id //QueryRow?
 
-	beginx, err := r.db.Beginx()
+	beginx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	//err := r.pool.QueryRow(ctx, `INSERT INTO "banner" (feature_id, title, text, url, is_active, created_at, updated_at)
-	//VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`, banner.FeatureID, banner.Title, banner.Text, banner.URL, banner.IsActive, now, now).Scan(&newID)
-	errInsertBanner := beginx.QueryRow(`INSERT INTO "banner" (feature_id, title, text, url, is_active, created_at, updated_at)
-	VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`, banner.FeatureID, banner.Title, banner.Text, banner.URL, banner.IsActive, now, now).Scan(&newID)
-	if errInsertBanner != nil {
-		return err
+	// insert into feature
+	errInsertFeature := beginx.QueryRowContext(ctx, `INSERT INTO "feature" (id, created_at, updated_at)
+	VALUES ($1, $2, $3) RETURNING id`, banner.FeatureID, now, now).Scan(&newID)
+	if errInsertFeature != nil {
+		errRollBack := beginx.Rollback()
+		if errRollBack != nil {
+			return 0, errRollBack
+		}
+		return 0, errInsertFeature
 	}
-	fmt.Println(newID)
-	//_, errExecBannerTags := r.pool.Exec(ctx, `INSERT INTO "banner_tag" (banner_id, tag_id) VALUES ($1, $2)`, newID, banner.TagID)
-	//if errExecBannerTags != nil {
-	//	return errExecBannerTags
-	//}
-	//
-	//_, errExecFeatures := r.pool.Exec(ctx, `INSERT INTO "feature" (feature_id, created_at, updated_at)
-	//VALUES ($1, $2, $3)`, banner.FeatureID, now, now)
-	//if errExecFeatures != nil {
-	//	return errExecFeatures
-	//}
-	//
-	//// slice of tags!!!!!
-	//_, errExecTags := r.pool.Exec(ctx, `INSERT INTO "tag" (tag_id, created_at, updated_at)
-	//VALUES ($1, $2, $3)`, banner.TagID, now, now)
-	//if errExecTags != nil {
-	//	return errExecTags
-	//}
+
+	// insert into tag
+	// TODO: TadID is slice!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	errInsertTag := beginx.QueryRowContext(ctx, `INSERT INTO "tag" (id, created_at, updated_at)
+	VALUES ($1, $2, $3) RETURNING id`, banner.TagID[0], now, now).Scan(&newID)
+	if errInsertTag != nil {
+		err := beginx.Rollback()
+		if err != nil {
+			return 0, err
+		}
+		return 0, err
+	}
+
+	errInsertBanner := beginx.QueryRowContext(ctx, `INSERT INTO "banner" (feature_id, title, text, url, is_active, created_at, updated_at)
+	VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`, banner.FeatureID, banner.Content.Title, banner.Content.Text, banner.Content.URL, banner.IsActive, now, now).Scan(&newID)
+	if errInsertBanner != nil {
+		err := beginx.Rollback()
+		if err != nil {
+			return 0, err
+		}
+		return 0, err
+	}
+
+	// insert into banner_tag
+	// TODO: TadID is slice!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	_, errInsertBannerTag := beginx.ExecContext(ctx, `INSERT INTO "banner_tag" (banner_id, tag_id)
+    VALUES ($1, $2)`, newID, banner.TagID[0])
+	if errInsertBannerTag != nil {
+		err := beginx.Rollback()
+		if err != nil {
+			return 0, err
+		}
+		return 0, err
+	}
 
 	errCommit := beginx.Commit()
 	if errCommit != nil {
-		return errCommit
+		return 0, errCommit
 	}
-	return nil
+	return newID, nil
 }
