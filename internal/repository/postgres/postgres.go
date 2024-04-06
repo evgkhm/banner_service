@@ -56,6 +56,7 @@ func (r *Repo) CreateBanner(ctx context.Context, banner *entity.Banner) (uint64,
 
 	// insert into tag
 	// TODO: TadID is slice!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 	errInsertTag := beginx.QueryRowContext(ctx, `INSERT INTO "tag" (id, created_at, updated_at)
 	VALUES ($1, $2, $3) RETURNING id`, banner.TagID[0], now, now).Scan(&newID)
 	if errInsertTag != nil {

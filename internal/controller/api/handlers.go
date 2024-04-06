@@ -48,7 +48,8 @@ func (h *Handler) createBanner(ctx *gin.Context) {
 	}
 
 	h.logger.Info("banner created", bannerID)
-	ctx.JSON(http.StatusCreated, bannerID)
+	//ctx.JSON(http.StatusCreated, bannerID)
+	writePositiveResponse(ctx, http.StatusCreated, bannerID)
 	return
 }
 
