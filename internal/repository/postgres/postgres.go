@@ -4,6 +4,7 @@ import (
 	"banner_service/internal/entity"
 	"context"
 	"github.com/jmoiron/sqlx"
+	"strings"
 	"time"
 )
 
@@ -54,11 +55,18 @@ func (r *Repo) CreateBanner(ctx context.Context, banner *entity.Banner) (uint64,
 		return 0, errInsertFeature
 	}
 
-	// insert into tag
-	// TODO: TadID is slice!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	// insert into tag slice of tagIDs
+	var valueStrings []string
+	var valueArgs []interface{}
+	for _, tagID := range banner.TagID {
+		valueStrings = append(valueStrings, "(?, ?, ?)")
+		valueArgs = append(valueArgs, tagID, now, now)
+	}
+	justString := strings.Join(valueStrings, ", ")
+	query := "INSERT INTO tag (id, created_at, updated_at) VALUES " +
+		sqlx.Rebind(sqlx.DOLLAR, justString)
 
-	errInsertTag := beginx.QueryRowContext(ctx, `INSERT INTO "tag" (id, created_at, updated_at)
-	VALUES ($1, $2, $3) RETURNING id`, banner.TagID[0], now, now).Scan(&newID)
+	_, errInsertTag := beginx.ExecContext(ctx, query, valueArgs...)
 	if errInsertTag != nil {
 		errRollBack := beginx.Rollback()
 		if errRollBack != nil {
