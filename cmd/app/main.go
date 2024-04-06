@@ -33,7 +33,7 @@ func main() {
 	}
 	defer db.Close()
 
-	repo := postgres.New(db.Pool)
+	repo := postgres.New(db)
 
 	useCase := usecase.New(repo)
 
