@@ -65,7 +65,6 @@ func (r *Repo) CreateBanner(ctx context.Context, banner *entity.Banner) (uint64,
 	justString := strings.Join(valueStrings, ", ")
 	query := "INSERT INTO tag (id, created_at, updated_at) VALUES " +
 		sqlx.Rebind(sqlx.DOLLAR, justString)
-
 	_, errInsertTag := beginx.ExecContext(ctx, query, valueArgs...)
 	if errInsertTag != nil {
 		errRollBack := beginx.Rollback()
@@ -75,6 +74,7 @@ func (r *Repo) CreateBanner(ctx context.Context, banner *entity.Banner) (uint64,
 		return 0, errInsertTag
 	}
 
+	// insert into banner
 	errInsertBanner := beginx.QueryRowContext(ctx, `INSERT INTO "banner" (feature_id, title, text, url, is_active, created_at, updated_at)
 	VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`, banner.FeatureID, banner.Content.Title, banner.Content.Text, banner.Content.URL, banner.IsActive, now, now).Scan(&newID)
 	if errInsertBanner != nil {
@@ -86,12 +86,19 @@ func (r *Repo) CreateBanner(ctx context.Context, banner *entity.Banner) (uint64,
 	}
 
 	// insert into banner_tag
-	// TODO: TadID is slice!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	_, errInsertBannerTag := beginx.ExecContext(ctx, `INSERT INTO "banner_tag" (banner_id, tag_id)
-    VALUES ($1, $2)`, newID, banner.TagID[0])
+	var valueStringsBannerTags []string
+	var valueArgsBannerTags []interface{}
+	for _, tagID := range banner.TagID {
+		valueStringsBannerTags = append(valueStringsBannerTags, "(?, ?)")
+		valueArgsBannerTags = append(valueArgsBannerTags, newID, tagID)
+	}
+	justString = strings.Join(valueStringsBannerTags, ", ")
+	query = "INSERT INTO banner_tag (banner_id, tag_id) VALUES " +
+		sqlx.Rebind(sqlx.DOLLAR, justString)
+	_, errInsertBannerTag := beginx.ExecContext(ctx, query, valueArgsBannerTags...)
 	if errInsertBannerTag != nil {
 		errRollBack := beginx.Rollback()
-		if err != nil {
+		if errRollBack != nil {
 			return 0, errRollBack
 		}
 		return 0, errInsertBannerTag
