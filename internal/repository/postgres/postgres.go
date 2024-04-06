@@ -59,21 +59,21 @@ func (r *Repo) CreateBanner(ctx context.Context, banner *entity.Banner) (uint64,
 	errInsertTag := beginx.QueryRowContext(ctx, `INSERT INTO "tag" (id, created_at, updated_at)
 	VALUES ($1, $2, $3) RETURNING id`, banner.TagID[0], now, now).Scan(&newID)
 	if errInsertTag != nil {
-		err := beginx.Rollback()
-		if err != nil {
-			return 0, err
+		errRollBack := beginx.Rollback()
+		if errRollBack != nil {
+			return 0, errRollBack
 		}
-		return 0, err
+		return 0, errInsertTag
 	}
 
 	errInsertBanner := beginx.QueryRowContext(ctx, `INSERT INTO "banner" (feature_id, title, text, url, is_active, created_at, updated_at)
 	VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`, banner.FeatureID, banner.Content.Title, banner.Content.Text, banner.Content.URL, banner.IsActive, now, now).Scan(&newID)
 	if errInsertBanner != nil {
-		err := beginx.Rollback()
-		if err != nil {
-			return 0, err
+		errRollBack := beginx.Rollback()
+		if errRollBack != nil {
+			return 0, errRollBack
 		}
-		return 0, err
+		return 0, errInsertBanner
 	}
 
 	// insert into banner_tag
@@ -81,11 +81,11 @@ func (r *Repo) CreateBanner(ctx context.Context, banner *entity.Banner) (uint64,
 	_, errInsertBannerTag := beginx.ExecContext(ctx, `INSERT INTO "banner_tag" (banner_id, tag_id)
     VALUES ($1, $2)`, newID, banner.TagID[0])
 	if errInsertBannerTag != nil {
-		err := beginx.Rollback()
+		errRollBack := beginx.Rollback()
 		if err != nil {
-			return 0, err
+			return 0, errRollBack
 		}
-		return 0, err
+		return 0, errInsertBannerTag
 	}
 
 	errCommit := beginx.Commit()

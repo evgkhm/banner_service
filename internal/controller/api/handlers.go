@@ -36,14 +36,14 @@ func (h *Handler) createBanner(ctx *gin.Context) {
 	errDecode := json.NewDecoder(ctx.Request.Body).Decode(&newBanner)
 	if errDecode != nil {
 		h.logger.Error("can't decode banner", errDecode)
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": errDecode.Error()})
+		writeErrorResponse(ctx, http.StatusBadRequest, errDecode.Error())
 		return
 	}
 
 	bannerID, errBannerCreate := h.usecase.CreateBanner(ctx, newBanner)
 	if errBannerCreate != nil {
 		h.logger.Error("can't create banner", errBannerCreate)
-		ctx.JSON(http.StatusInternalServerError, errBannerCreate)
+		writeErrorResponse(ctx, http.StatusInternalServerError, errBannerCreate.Error())
 		return
 	}
 
