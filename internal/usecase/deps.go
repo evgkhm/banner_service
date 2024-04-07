@@ -6,6 +6,6 @@ import (
 )
 
 type repository interface {
-	GetUserBanner(ctx context.Context, userBanner *entity.UserBannerRequest) (entity.UserBannerResponse, error)
+	GetUserBanner(ctx context.Context, tagID uint64, featureID uint64, useLastVersion bool) (entity.UserBannerResponse, error)
 	CreateBanner(ctx context.Context, banner *entity.Banner) (uint64, error)
 }

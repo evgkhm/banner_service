@@ -5,24 +5,40 @@ import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
 
 func (h *Handler) getUserBanner(ctx *gin.Context) {
-	userBanner := &entity.UserBannerRequest{}
-	errDecode := json.NewDecoder(ctx.Request.Body).Decode(userBanner)
-	if errDecode != nil {
-		h.logger.Error("can't decode user banner", errDecode)
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": errDecode.Error()})
+	//userBanner := &entity.UserBannerRequest{}
+	tagID, err := strconv.ParseUint(ctx.Query("tag_id"), 10, 64)
+	if err != nil {
+		h.logger.Error("can't get tag id", err)
+		writeErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	userBannerResponse, errGetUserBanner := h.usecase.GetUserBanner(ctx, userBanner)
+	featureID, err := strconv.ParseUint(ctx.Query("feature_id"), 10, 64)
+	if err != nil {
+		h.logger.Error("can't get feature id", err)
+		writeErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	useLastVerson, err := strconv.ParseBool(ctx.Query("use_last_revision"))
+	if err != nil {
+		h.logger.Error("can't get use last version", err)
+		writeErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	userBannerResponse, errGetUserBanner := h.usecase.GetUserBanner(ctx, tagID, featureID, useLastVerson)
 	if errGetUserBanner != nil {
 		h.logger.Error("can't get user banner", errGetUserBanner)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": errGetUserBanner})
+		writeErrorResponse(ctx, http.StatusInternalServerError, errGetUserBanner.Error())
 		return
 	}
 
+	h.logger.Info("user banner received", userBannerResponse)
 	ctx.JSON(http.StatusOK, userBannerResponse)
 	return
 }
@@ -48,7 +64,6 @@ func (h *Handler) createBanner(ctx *gin.Context) {
 	}
 
 	h.logger.Info("banner created", bannerID)
-	//ctx.JSON(http.StatusCreated, bannerID)
 	writePositiveResponse(ctx, http.StatusCreated, bannerID)
 	return
 }

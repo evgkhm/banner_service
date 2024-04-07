@@ -16,23 +16,41 @@ const (
 )
 
 type Repo struct {
-	//pool *pgxpool.Pool
 	db *sqlx.DB
-	//db *db
 }
 
 func New(db *sqlx.DB) *Repo {
 	return &Repo{
 		db: db,
-		//pool: db,
 	}
 }
 
-func (r *Repo) GetUserBanner(ctx context.Context, userBanner *entity.UserBannerRequest) (entity.UserBannerResponse, error) {
-	//data := entity.UserBannerResponse{}
+func (r *Repo) GetUserBanner(ctx context.Context, tagID uint64, featureID uint64, useLastVersion bool) (entity.UserBannerResponse, error) {
+	data := entity.UserBannerResponse{}
 
-	//_, err := r.pool.QueryRow(ctx, `SELECT `)
-	return entity.UserBannerResponse{}, nil
+	beginx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return entity.UserBannerResponse{}, err
+	}
+
+	query := `SELECT b.title, b.text, b.url FROM banner b
+			JOIN banner_tag bg ON bg.banner_id = b.id
+			WHERE bg.tag_id = $1 AND b.feature_id = $2`
+
+	errRow := beginx.QueryRowContext(ctx, query, tagID, featureID).Scan(&data.Title, &data.Text, &data.URL)
+	if errRow != nil {
+		errRollBack := beginx.Rollback()
+		if errRollBack != nil {
+			return entity.UserBannerResponse{}, errRollBack
+		}
+		return entity.UserBannerResponse{}, errRow
+	}
+
+	errCommit := beginx.Commit()
+	if errCommit != nil {
+		return entity.UserBannerResponse{}, errCommit
+	}
+	return data, nil
 }
 
 func (r *Repo) CreateBanner(ctx context.Context, banner *entity.Banner) (uint64, error) {
