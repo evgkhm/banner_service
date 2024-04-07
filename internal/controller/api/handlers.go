@@ -2,7 +2,9 @@ package api
 
 import (
 	"banner_service/internal/entity"
+	"banner_service/internal/repository/postgres"
 	"encoding/json"
+	"errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -33,7 +35,11 @@ func (h *Handler) getUserBanner(ctx *gin.Context) {
 
 	userBannerResponse, errGetUserBanner := h.usecase.GetUserBanner(ctx, tagID, featureID, useLastVerson)
 	if errGetUserBanner != nil {
-		h.logger.Error("can't get user banner", errGetUserBanner)
+		if errors.Is(errGetUserBanner, postgres.ErrorUserBannerNotFound) {
+			writeErrorResponse(ctx, http.StatusNotFound, errGetUserBanner.Error())
+			return
+		}
+		h.logger.Error("ошибка получения баннера:", errGetUserBanner)
 		writeErrorResponse(ctx, http.StatusInternalServerError, errGetUserBanner.Error())
 		return
 	}

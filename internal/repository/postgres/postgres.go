@@ -3,6 +3,8 @@ package postgres
 import (
 	"banner_service/internal/entity"
 	"context"
+	"database/sql"
+	"errors"
 	"github.com/jmoiron/sqlx"
 	"strings"
 	"time"
@@ -14,6 +16,8 @@ const (
 	sortAscending  string = "ASC"
 	sortDescending string = "DESC"
 )
+
+var ErrorUserBannerNotFound = errors.New("баннер не найден")
 
 type Repo struct {
 	db *sqlx.DB
@@ -39,6 +43,13 @@ func (r *Repo) GetUserBanner(ctx context.Context, tagID uint64, featureID uint64
 
 	errRow := beginx.QueryRowContext(ctx, query, tagID, featureID).Scan(&data.Title, &data.Text, &data.URL)
 	if errRow != nil {
+		if errors.Is(errRow, sql.ErrNoRows) {
+			errRollBack := beginx.Rollback()
+			if errRollBack != nil {
+				return entity.UserBannerResponse{}, errRollBack
+			}
+			return entity.UserBannerResponse{}, ErrorUserBannerNotFound
+		}
 		errRollBack := beginx.Rollback()
 		if errRollBack != nil {
 			return entity.UserBannerResponse{}, errRollBack
