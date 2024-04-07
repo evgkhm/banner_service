@@ -11,7 +11,6 @@ import (
 )
 
 func (h *Handler) getUserBanner(ctx *gin.Context) {
-	//userBanner := &entity.UserBannerRequest{}
 	tagID, err := strconv.ParseUint(ctx.Query("tag_id"), 10, 64)
 	if err != nil {
 		h.logger.Error("can't get tag id", err)
@@ -49,7 +48,43 @@ func (h *Handler) getUserBanner(ctx *gin.Context) {
 	return
 }
 
-func (h *Handler) getBanner(ctx *gin.Context) {
+func (h *Handler) getBanners(ctx *gin.Context) {
+	tagID, err := strconv.ParseUint(ctx.Query("tag_id"), 10, 64)
+	if err != nil {
+		h.logger.Error("can't get tag id", err)
+		writeErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	featureID, err := strconv.ParseUint(ctx.Query("feature_id"), 10, 64)
+	if err != nil {
+		h.logger.Error("can't get feature id", err)
+		writeErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	limit, err := strconv.ParseUint(ctx.Query("limit"), 10, 64)
+	if err != nil {
+		h.logger.Error("can't get limit", err)
+		writeErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	offset, err := strconv.ParseUint(ctx.Query("offset"), 10, 64)
+	if err != nil {
+		h.logger.Error("can't get offset", err)
+		writeErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	usersBanners, errGetBanners := h.usecase.GetBanners(ctx, tagID, featureID, limit, offset)
+	if errGetBanners != nil {
+		h.logger.Error("ошибка получения баннеров:", errGetBanners)
+		writeErrorResponse(ctx, http.StatusInternalServerError, errGetBanners.Error())
+		return
+	}
+	h.logger.Info("полученные баннеры", usersBanners)
+	ctx.JSON(http.StatusOK, usersBanners)
 	return
 }
 

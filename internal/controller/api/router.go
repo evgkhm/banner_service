@@ -18,7 +18,7 @@ func New(usecase useCase, log logger) *Handler {
 	h.Use(gin.Recovery())
 
 	h.GET("/user_banner", h.getUserBanner)
-	h.GET("/banner", h.getBanner)
+	h.GET("/banner", h.getBanners)
 	h.POST("/banner", h.createBanner)
 	h.PATCH("/banner/{id}", h.updateBanner)
 	h.DELETE("/banner/{id}", h.deleteBanner)

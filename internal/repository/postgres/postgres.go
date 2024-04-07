@@ -64,6 +64,45 @@ func (r *Repo) GetUserBanner(ctx context.Context, tagID uint64, featureID uint64
 	return data, nil
 }
 
+func (r *Repo) GetBanners(ctx context.Context, tagID uint64, featureID uint64, limit uint64, offset uint64) ([]entity.BannersList, error) {
+	banners := []entity.BannersList{}
+	tr, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	query := `SELECT banner.* FROM banner 
+		LEFT JOIN banner_tag ON banner_tag.banner_id = banner.id
+		WHERE banner.feature_id = ($1) AND banner_tag.tag_id = ($2)
+		ORDER BY banner.created_at DESC LIMIT ($3) OFFSET ($4)`
+
+	rows, errRows := tr.QueryContext(ctx, query, featureID, tagID, limit, offset)
+	if errRows != nil {
+		errRollBack := tr.Rollback()
+		if errRollBack != nil {
+			return nil, errRollBack
+		}
+		return nil, errRows
+	}
+	for rows.Next() {
+		var row entity.BannersList
+		errScan := rows.Scan(&row.BannerID, &row.TagIDs, &row.FeatureID, &row.Content.Title, &row.Content.Text,
+			&row.Content.URL, &row.IsActive, &row.CreatedAt, &row.UpdatedAt)
+		if errScan != nil {
+			errRollBack := tr.Rollback()
+			if errRollBack != nil {
+				return nil, errRollBack
+			}
+			return nil, errScan
+		}
+		banners = append(banners, row)
+	}
+	errCommit := tr.Commit()
+	if errCommit != nil {
+		return nil, errCommit
+	}
+	return banners, nil
+}
+
 func (r *Repo) CreateBanner(ctx context.Context, banner *entity.Banner) (uint64, error) {
 	now := time.Now()
 	var newID uint64
