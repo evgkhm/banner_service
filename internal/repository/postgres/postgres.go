@@ -64,18 +64,38 @@ func (r *Repo) GetUserBanner(ctx context.Context, tagID uint64, featureID uint64
 	return data, nil
 }
 
-func (r *Repo) GetBanners(ctx context.Context, tagID uint64, featureID uint64, limit uint64, offset uint64) ([]entity.BannersList, error) {
+func (r *Repo) GetBanners(ctx context.Context, tagID []uint64, featureID uint64, limit uint64, offset uint64) ([]entity.BannersList, error) {
 	banners := []entity.BannersList{}
 	tr, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
-	query := `SELECT banner.* FROM banner 
-		LEFT JOIN banner_tag ON banner_tag.banner_id = banner.id
-		WHERE banner.feature_id = ($1) AND banner_tag.tag_id = ($2)
-		ORDER BY banner.created_at DESC LIMIT ($3) OFFSET ($4)`
+	query := `WITH aggregated_tags AS (
+	SELECT banner_id, string_agg(tag_id::text, ',') AS all_tag_ids
+	FROM banner_tag
+	GROUP BY banner_id
+	)
+	
+	SELECT b.id, at.all_tag_ids, b.feature_id, b.title, b.text, b.url, b.is_active, b.created_at, b.updated_at FROM banner b
+	LEFT JOIN aggregated_tags at ON b.id = at.banner_id
+	WHERE b.feature_id = (?)
+	 OR b.id IN (
+		SELECT bt.banner_id
+		FROM banner_tag bt
+		WHERE bt.tag_id IN (?)
+		LIMIT (?) OFFSET (?)
+	)`
+	qry, args, errQuery := sqlx.In(query, featureID, tagID, limit, offset)
+	if errQuery != nil {
+		errRollBack := tr.Rollback()
+		if errRollBack != nil {
+			return nil, errRollBack
+		}
+		return nil, errQuery
+	}
+	qry = r.db.Rebind(qry)
 
-	rows, errRows := tr.QueryContext(ctx, query, featureID, tagID, limit, offset)
+	rows, errRows := tr.QueryContext(ctx, qry, args...)
 	if errRows != nil {
 		errRollBack := tr.Rollback()
 		if errRollBack != nil {
@@ -83,6 +103,7 @@ func (r *Repo) GetBanners(ctx context.Context, tagID uint64, featureID uint64, l
 		}
 		return nil, errRows
 	}
+
 	for rows.Next() {
 		var row entity.BannersList
 		errScan := rows.Scan(&row.BannerID, &row.TagIDs, &row.FeatureID, &row.Content.Title, &row.Content.Text,

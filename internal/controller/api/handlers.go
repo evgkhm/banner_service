@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 func (h *Handler) getUserBanner(ctx *gin.Context) {
@@ -49,10 +50,10 @@ func (h *Handler) getUserBanner(ctx *gin.Context) {
 }
 
 func (h *Handler) getBanners(ctx *gin.Context) {
-	tagID, err := strconv.ParseUint(ctx.Query("tag_id"), 10, 64)
-	if err != nil {
-		h.logger.Error("can't get tag id", err)
-		writeErrorResponse(ctx, http.StatusBadRequest, err.Error())
+	tagIDs, errParseTagIDs := parseTagIDs(ctx.Query("tag_ids"))
+	if errParseTagIDs != nil {
+		h.logger.Error("can't parse tag ids", errParseTagIDs)
+		writeErrorResponse(ctx, http.StatusBadRequest, errParseTagIDs.Error())
 		return
 	}
 
@@ -77,7 +78,7 @@ func (h *Handler) getBanners(ctx *gin.Context) {
 		return
 	}
 
-	usersBanners, errGetBanners := h.usecase.GetBanners(ctx, tagID, featureID, limit, offset)
+	usersBanners, errGetBanners := h.usecase.GetBanners(ctx, tagIDs, featureID, limit, offset)
 	if errGetBanners != nil {
 		h.logger.Error("ошибка получения баннеров:", errGetBanners)
 		writeErrorResponse(ctx, http.StatusInternalServerError, errGetBanners.Error())
@@ -86,6 +87,21 @@ func (h *Handler) getBanners(ctx *gin.Context) {
 	h.logger.Info("полученные баннеры", usersBanners)
 	ctx.JSON(http.StatusOK, usersBanners)
 	return
+}
+
+func parseTagIDs(tagIDsParam string) ([]uint64, error) {
+	var tagIDs []uint64
+
+	ids := strings.Split(tagIDsParam, ",")
+	for _, id := range ids {
+		tagID, err := strconv.ParseUint(id, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		tagIDs = append(tagIDs, tagID)
+	}
+
+	return tagIDs, nil
 }
 
 func (h *Handler) createBanner(ctx *gin.Context) {

@@ -23,6 +23,6 @@ func (s *UseCase) CreateBanner(ctx context.Context, banner *entity.Banner) (uint
 	return s.repo.CreateBanner(ctx, banner)
 }
 
-func (s *UseCase) GetBanners(ctx context.Context, tagID uint64, featureID uint64, limit uint64, offset uint64) ([]entity.BannersList, error) {
+func (s *UseCase) GetBanners(ctx context.Context, tagID []uint64, featureID uint64, limit uint64, offset uint64) ([]entity.BannersList, error) {
 	return s.repo.GetBanners(ctx, tagID, featureID, limit, offset)
 }

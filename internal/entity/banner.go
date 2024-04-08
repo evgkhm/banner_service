@@ -21,16 +21,9 @@ type UserBannerResponse struct {
 	URL   string `json:"url"`
 }
 
-//type UsersBanners struct {
-//	BannerID  uint64 `json:"banner_id"`
-//	Banner    Banner `json:"banner"`
-//	CreatedAt string `json:"created_at"`
-//	UpdatedAt string `json:"updated_at"`
-//}
-
 type BannersList struct {
 	BannerID  int       `json:"banner_id"`
-	TagIDs    []int     `json:"tag_ids"`
+	TagIDs    *string   `json:"tag_ids"`
 	FeatureID int       `json:"feature_id"`
 	Content   Content   `json:"content"`
 	IsActive  bool      `json:"is_active"`
