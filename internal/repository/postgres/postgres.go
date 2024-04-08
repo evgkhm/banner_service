@@ -207,18 +207,6 @@ func (r *Repo) UpdateBanner(ctx context.Context, bannerID uint64, banner *entity
 	if err != nil {
 		return err
 	}
-	/*
-		   DELETE FROM banner_tag
-		WHERE banner_id = 3;
-
-		INSERT INTO feature (id, created_at, updated_at) VALUES (40, now(), now());
-		INSERT INTO tag (id, created_at, updated_at) VALUES (40, now(), now());
-		INSERT INTO banner_tag (banner_id, tag_id) VALUES (3, 40);
-
-		UPDATE banner
-		SET feature_id = 40,
-		    updated_at = now()
-		WHERE id = 3;*/
 
 	updateFeature := `UPDATE "feature" SET id = $1, created_at = $2, updated_at = $3 WHERE id = 
 		(SELECT feature_id FROM banner WHERE id = $4)`
@@ -283,5 +271,38 @@ func (r *Repo) UpdateBanner(ctx context.Context, bannerID uint64, banner *entity
 		return errCommit
 	}
 
+	return nil
+}
+
+func (r *Repo) DeleteBanner(ctx context.Context, bannerID uint64) error {
+	tr, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	deleteBannerTags := `DELETE from banner_tag WHERE banner_id = $1`
+	_, errDelete := tr.ExecContext(ctx, deleteBannerTags, bannerID)
+	if errDelete != nil {
+		errRollBack := tr.Rollback()
+		if errRollBack != nil {
+			return errRollBack
+		}
+		return errDelete
+	}
+
+	deleteBanner := `DELETE from banner WHERE id = $1`
+	_, errDelete = tr.ExecContext(ctx, deleteBanner, bannerID)
+	if errDelete != nil {
+		errRollBack := tr.Rollback()
+		if errRollBack != nil {
+			return errRollBack
+		}
+		return errDelete
+	}
+
+	errCommit := tr.Commit()
+	if errCommit != nil {
+		return errCommit
+	}
 	return nil
 }

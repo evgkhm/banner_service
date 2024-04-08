@@ -126,7 +126,6 @@ func (h *Handler) createBanner(ctx *gin.Context) {
 }
 
 func (h *Handler) updateBanner(ctx *gin.Context) {
-	// get banner id from query
 	bannerID, err := strconv.ParseUint(ctx.Param("id"), 10, 64)
 	if err != nil {
 		h.logger.Error("can't get banner id", err)
@@ -153,5 +152,20 @@ func (h *Handler) updateBanner(ctx *gin.Context) {
 }
 
 func (h *Handler) deleteBanner(ctx *gin.Context) {
+	bannerID, err := strconv.ParseUint(ctx.Param("id"), 10, 64)
+	if err != nil {
+		h.logger.Error("can't get banner id", err)
+		writeErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	errDelete := h.usecase.DeleteBanner(ctx, bannerID)
+	if errDelete != nil {
+		h.logger.Error("can't delete banner", errDelete)
+		writeErrorResponse(ctx, http.StatusInternalServerError, errDelete.Error())
+		return
+	}
+	h.logger.Info("Баннер успешно удален")
+	ctx.JSON(http.StatusNoContent, "Баннер успешно удален")
 	return
 }

@@ -30,3 +30,7 @@ func (s *UseCase) GetBanners(ctx context.Context, tagID []uint64, featureID uint
 func (s *UseCase) UpdateBanner(ctx context.Context, bannerID uint64, banner *entity.Banner) error {
 	return s.repo.UpdateBanner(ctx, bannerID, banner)
 }
+
+func (s *UseCase) DeleteBanner(ctx context.Context, bannerID uint64) error {
+	return s.repo.DeleteBanner(ctx, bannerID)
+}

@@ -21,7 +21,7 @@ func New(usecase useCase, log logger) *Handler {
 	h.GET("/banner", h.getBanners)
 	h.POST("/banner", h.createBanner)
 	h.PATCH("/banner/:id", h.updateBanner)
-	h.DELETE("/banner/{id}", h.deleteBanner)
+	h.DELETE("/banner/:id", h.deleteBanner)
 
 	return h
 
