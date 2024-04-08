@@ -6,22 +6,42 @@ import (
 	"os"
 )
 
-func DummyMiddleware() gin.HandlerFunc {
+func middlewareForAdmin() gin.HandlerFunc {
 	requiredAdminToken := os.Getenv("API_TOKEN")
+
+	if requiredAdminToken == "" {
+		log.Fatal("Please set API_TOKEN environment variable")
+	}
+
+	return func(c *gin.Context) {
+		token := c.GetHeader("token")
+		if token == "" {
+			respondWithError(c, 401, "Token required")
+			return
+		}
+
+		if token != requiredAdminToken {
+			respondWithError(c, 401, "Invalid token")
+			return
+		}
+	}
+}
+
+func middlewareForAdminOrUser() gin.HandlerFunc {
 	requiredUserToken := os.Getenv("API_USER_TOKEN")
-	// We want to make sure the token is set, bail if not
+	requiredAdminToken := os.Getenv("API_TOKEN")
+
 	if requiredUserToken == "" || requiredAdminToken == "" {
 		log.Fatal("Please set API_TOKEN environment variable")
 	}
 
 	return func(c *gin.Context) {
-		// Проверяем пользовательский токен
 		token := c.GetHeader("token")
-
 		if token == "" {
 			respondWithError(c, 401, "Token required")
 			return
 		}
+
 		if token != requiredUserToken && token != requiredAdminToken {
 			respondWithError(c, 401, "Invalid token")
 			return

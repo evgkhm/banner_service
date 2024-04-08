@@ -16,14 +16,12 @@ func New(usecase useCase, log logger) *Handler {
 	}
 
 	h.Use(gin.Recovery())
-	authMiddleware := DummyMiddleware()
-	h.Use(authMiddleware)
 
-	h.GET("/user_banner", h.getUserBanner)
-	h.GET("/banner", h.getBanners)
-	h.POST("/banner", h.createBanner)
-	h.PATCH("/banner/:id", h.updateBanner)
-	h.DELETE("/banner/:id", h.deleteBanner)
+	h.GET("/user_banner", middlewareForAdminOrUser(), h.getUserBanner)
+	h.GET("/banner", middlewareForAdmin(), h.getBanners)
+	h.POST("/banner", middlewareForAdmin(), h.createBanner)
+	h.PATCH("/banner/:id", middlewareForAdmin(), h.updateBanner)
+	h.DELETE("/banner/:id", middlewareForAdmin(), h.deleteBanner)
 
 	return h
 
