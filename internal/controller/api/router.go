@@ -16,6 +16,8 @@ func New(usecase useCase, log logger) *Handler {
 	}
 
 	h.Use(gin.Recovery())
+	authMiddleware := DummyMiddleware()
+	h.Use(authMiddleware)
 
 	h.GET("/user_banner", h.getUserBanner)
 	h.GET("/banner", h.getBanners)

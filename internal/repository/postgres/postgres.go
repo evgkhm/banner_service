@@ -64,7 +64,7 @@ func (r *Repo) GetUserBanner(ctx context.Context, tagID uint64, featureID uint64
 	return data, nil
 }
 
-func (r *Repo) GetBanners(ctx context.Context, tagID []uint64, featureID uint64, limit uint64, offset uint64) ([]entity.BannersList, error) {
+func (r *Repo) GetBanners(ctx context.Context, tagID uint64, featureID uint64, limit uint64, offset uint64) ([]entity.BannersList, error) {
 	var banners []entity.BannersList
 	tr, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -134,8 +134,8 @@ func (r *Repo) CreateBanner(ctx context.Context, banner *entity.Banner) (uint64,
 	}
 
 	// insert into feature
-	errInsertFeature := beginx.QueryRowContext(ctx, `INSERT INTO "feature" (id, created_at, updated_at)
-	VALUES ($1, $2, $3) RETURNING id`, banner.FeatureID, now, now).Scan(&newID)
+	_, errInsertFeature := beginx.ExecContext(ctx, `INSERT INTO "feature" (id, created_at, updated_at)
+	VALUES ($1, $2, $3)  ON CONFLICT DO NOTHING`, banner.FeatureID, now, now)
 	if errInsertFeature != nil {
 		errRollBack := beginx.Rollback()
 		if errRollBack != nil {
@@ -153,7 +153,8 @@ func (r *Repo) CreateBanner(ctx context.Context, banner *entity.Banner) (uint64,
 	}
 	justString := strings.Join(valueStrings, ", ")
 	query := "INSERT INTO tag (id, created_at, updated_at) VALUES " +
-		sqlx.Rebind(sqlx.DOLLAR, justString)
+		sqlx.Rebind(sqlx.DOLLAR, justString) +
+		" ON CONFLICT DO NOTHING"
 	_, errInsertTag := beginx.ExecContext(ctx, query, valueArgs...)
 	if errInsertTag != nil {
 		errRollBack := beginx.Rollback()
@@ -227,7 +228,7 @@ func (r *Repo) UpdateBanner(ctx context.Context, bannerID uint64, banner *entity
 	}
 	justString := strings.Join(valueStringsTags, ", ")
 	query := "INSERT INTO tag (id, created_at, updated_at) VALUES " +
-		sqlx.Rebind(sqlx.DOLLAR, justString)
+		sqlx.Rebind(sqlx.DOLLAR, justString) + " ON CONFLICT DO NOTHING"
 	_, errInsertBannerTag := tr.ExecContext(ctx, query, valueArgsTags...)
 	if errInsertBannerTag != nil {
 		errRollBack := tr.Rollback()
@@ -256,7 +257,7 @@ func (r *Repo) UpdateBanner(ctx context.Context, bannerID uint64, banner *entity
 	}
 	justString = strings.Join(valueStringsBannerTags, ", ")
 	query = "INSERT INTO banner_tag (banner_id, tag_id) VALUES " +
-		sqlx.Rebind(sqlx.DOLLAR, justString)
+		sqlx.Rebind(sqlx.DOLLAR, justString) + " ON CONFLICT DO NOTHING"
 	_, errInsertBannerTag = tr.ExecContext(ctx, query, valueArgsBannerTags...)
 	if errInsertBannerTag != nil {
 		errRollBack := tr.Rollback()

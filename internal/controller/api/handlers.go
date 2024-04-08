@@ -12,6 +12,9 @@ import (
 )
 
 func (h *Handler) getUserBanner(ctx *gin.Context) {
+	//authMiddleware := DummyMiddleware()
+	//authMiddleware(ctx)
+
 	tagID, err := strconv.ParseUint(ctx.Query("tag_id"), 10, 64)
 	if err != nil {
 		h.logger.Error("can't get tag id", err)
@@ -50,7 +53,8 @@ func (h *Handler) getUserBanner(ctx *gin.Context) {
 }
 
 func (h *Handler) getBanners(ctx *gin.Context) {
-	tagIDs, errParseTagIDs := parseTagIDs(ctx.Query("tag_ids"))
+	//tagIDs, errParseTagIDs := parseTagIDs(ctx.Query("tag_ids"))
+	tagIDs, errParseTagIDs := strconv.ParseUint(ctx.Query("tag_id"), 10, 64)
 	if errParseTagIDs != nil {
 		h.logger.Error("can't parse tag ids", errParseTagIDs)
 		writeErrorResponse(ctx, http.StatusBadRequest, errParseTagIDs.Error())
