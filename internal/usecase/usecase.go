@@ -26,3 +26,7 @@ func (s *UseCase) CreateBanner(ctx context.Context, banner *entity.Banner) (uint
 func (s *UseCase) GetBanners(ctx context.Context, tagID []uint64, featureID uint64, limit uint64, offset uint64) ([]entity.BannersList, error) {
 	return s.repo.GetBanners(ctx, tagID, featureID, limit, offset)
 }
+
+func (s *UseCase) UpdateBanner(ctx context.Context, bannerID uint64, banner *entity.Banner) error {
+	return s.repo.UpdateBanner(ctx, bannerID, banner)
+}

@@ -65,7 +65,7 @@ func (r *Repo) GetUserBanner(ctx context.Context, tagID uint64, featureID uint64
 }
 
 func (r *Repo) GetBanners(ctx context.Context, tagID []uint64, featureID uint64, limit uint64, offset uint64) ([]entity.BannersList, error) {
-	banners := []entity.BannersList{}
+	var banners []entity.BannersList
 	tr, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
@@ -198,4 +198,90 @@ func (r *Repo) CreateBanner(ctx context.Context, banner *entity.Banner) (uint64,
 		return 0, errCommit
 	}
 	return newID, nil
+}
+
+func (r *Repo) UpdateBanner(ctx context.Context, bannerID uint64, banner *entity.Banner) error {
+	now := time.Now()
+
+	tr, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	/*
+		   DELETE FROM banner_tag
+		WHERE banner_id = 3;
+
+		INSERT INTO feature (id, created_at, updated_at) VALUES (40, now(), now());
+		INSERT INTO tag (id, created_at, updated_at) VALUES (40, now(), now());
+		INSERT INTO banner_tag (banner_id, tag_id) VALUES (3, 40);
+
+		UPDATE banner
+		SET feature_id = 40,
+		    updated_at = now()
+		WHERE id = 3;*/
+
+	updateFeature := `UPDATE "feature" SET id = $1, created_at = $2, updated_at = $3 WHERE id = 
+		(SELECT feature_id FROM banner WHERE id = $4)`
+	_, errExec := tr.ExecContext(ctx, updateFeature, banner.FeatureID, now, now, bannerID)
+	if errExec != nil {
+		errRollBack := tr.Rollback()
+		if errRollBack != nil {
+			return errRollBack
+		}
+		return errExec
+	}
+
+	var valueStringsTags []string
+	var valueArgsTags []interface{}
+	for _, tagID := range banner.TagID {
+		valueStringsTags = append(valueStringsTags, "(?, ?, ?)")
+		valueArgsTags = append(valueArgsTags, tagID, now, now)
+	}
+	justString := strings.Join(valueStringsTags, ", ")
+	query := "INSERT INTO tag (id, created_at, updated_at) VALUES " +
+		sqlx.Rebind(sqlx.DOLLAR, justString)
+	_, errInsertBannerTag := tr.ExecContext(ctx, query, valueArgsTags...)
+	if errInsertBannerTag != nil {
+		errRollBack := tr.Rollback()
+		if errRollBack != nil {
+			return errRollBack
+		}
+		return errInsertBannerTag
+	}
+
+	deleteBannerTags := `DELETE from banner_tag WHERE banner_id = $1`
+	_, errDeleteBannerTag := tr.ExecContext(ctx, deleteBannerTags, bannerID)
+	if errDeleteBannerTag != nil {
+		errRollBack := tr.Rollback()
+		if errRollBack != nil {
+			return errRollBack
+		}
+		return errDeleteBannerTag
+	}
+
+	// insert into banner_tag
+	var valueStringsBannerTags []string
+	var valueArgsBannerTags []interface{}
+	for _, tagID := range banner.TagID {
+		valueStringsBannerTags = append(valueStringsBannerTags, "(?, ?)")
+		valueArgsBannerTags = append(valueArgsBannerTags, bannerID, tagID)
+	}
+	justString = strings.Join(valueStringsBannerTags, ", ")
+	query = "INSERT INTO banner_tag (banner_id, tag_id) VALUES " +
+		sqlx.Rebind(sqlx.DOLLAR, justString)
+	_, errInsertBannerTag = tr.ExecContext(ctx, query, valueArgsBannerTags...)
+	if errInsertBannerTag != nil {
+		errRollBack := tr.Rollback()
+		if errRollBack != nil {
+			return errRollBack
+		}
+		return errInsertBannerTag
+	}
+
+	errCommit := tr.Commit()
+	if errCommit != nil {
+		return errCommit
+	}
+
+	return nil
 }

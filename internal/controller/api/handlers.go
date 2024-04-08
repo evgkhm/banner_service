@@ -126,6 +126,29 @@ func (h *Handler) createBanner(ctx *gin.Context) {
 }
 
 func (h *Handler) updateBanner(ctx *gin.Context) {
+	// get banner id from query
+	bannerID, err := strconv.ParseUint(ctx.Param("id"), 10, 64)
+	if err != nil {
+		h.logger.Error("can't get banner id", err)
+		writeErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		return
+	}
+	newBanner := &entity.Banner{}
+	errDecode := json.NewDecoder(ctx.Request.Body).Decode(&newBanner)
+	if errDecode != nil {
+		h.logger.Error("can't decode banner", errDecode)
+		writeErrorResponse(ctx, http.StatusBadRequest, errDecode.Error())
+		return
+	}
+
+	errUpdate := h.usecase.UpdateBanner(ctx, bannerID, newBanner)
+	if errUpdate != nil {
+		h.logger.Error("can't update banner", errUpdate)
+		writeErrorResponse(ctx, http.StatusInternalServerError, errUpdate.Error())
+		return
+	}
+	h.logger.Info("banner updated", bannerID)
+	ctx.JSON(http.StatusOK, "OK")
 	return
 }
 
