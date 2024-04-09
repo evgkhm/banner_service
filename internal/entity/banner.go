@@ -10,12 +10,6 @@ type Banner struct {
 }
 
 type Content struct {
-	Title string `json:"title" example:"some_title"`
-	Text  string `json:"text" example:"some_text"`
-	URL   string `json:"url" example:"some_url"`
-}
-
-type UserBannerResponse struct {
 	Title string `json:"title"`
 	Text  string `json:"text"`
 	URL   string `json:"url"`

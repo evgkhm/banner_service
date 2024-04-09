@@ -29,12 +29,12 @@ func New(db *sqlx.DB) *Repo {
 	}
 }
 
-func (r *Repo) GetUserBanner(ctx context.Context, tagID uint64, featureID uint64, useLastVersion bool) (entity.UserBannerResponse, error) {
-	data := entity.UserBannerResponse{}
+func (r *Repo) GetUserBanner(ctx context.Context, tagID uint64, featureID uint64, useLastVersion bool) (entity.Content, error) {
+	data := entity.Content{}
 
 	beginx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return entity.UserBannerResponse{}, err
+		return entity.Content{}, err
 	}
 
 	query := `SELECT b.title, b.text, b.url FROM banner b
@@ -46,20 +46,20 @@ func (r *Repo) GetUserBanner(ctx context.Context, tagID uint64, featureID uint64
 		if errors.Is(errRow, sql.ErrNoRows) {
 			errRollBack := beginx.Rollback()
 			if errRollBack != nil {
-				return entity.UserBannerResponse{}, errRollBack
+				return entity.Content{}, errRollBack
 			}
-			return entity.UserBannerResponse{}, ErrorUserBannerNotFound
+			return entity.Content{}, ErrorUserBannerNotFound
 		}
 		errRollBack := beginx.Rollback()
 		if errRollBack != nil {
-			return entity.UserBannerResponse{}, errRollBack
+			return entity.Content{}, errRollBack
 		}
-		return entity.UserBannerResponse{}, errRow
+		return entity.Content{}, errRow
 	}
 
 	errCommit := beginx.Commit()
 	if errCommit != nil {
-		return entity.UserBannerResponse{}, errCommit
+		return entity.Content{}, errCommit
 	}
 	return data, nil
 }

@@ -80,10 +80,10 @@ func (mr *MockrepositoryMockRecorder) GetBanners(ctx, tagID, featureID, limit, o
 }
 
 // GetUserBanner mocks base method.
-func (m *Mockrepository) GetUserBanner(ctx context.Context, tagID, featureID uint64, useLastVersion bool) (entity.UserBannerResponse, error) {
+func (m *Mockrepository) GetUserBanner(ctx context.Context, tagID, featureID uint64, useLastVersion bool) (entity.Content, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserBanner", ctx, tagID, featureID, useLastVersion)
-	ret0, _ := ret[0].(entity.UserBannerResponse)
+	ret0, _ := ret[0].(entity.Content)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

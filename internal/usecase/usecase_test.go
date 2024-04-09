@@ -24,9 +24,9 @@ func TestUseCase_GetUserBanner(t *testing.T) {
 		offset        uint64
 		useLastVer    bool
 		timer         time.Time
-		repoResult    entity.UserBannerResponse
+		repoResult    entity.Content
 		repoError     error
-		expected      entity.UserBannerResponse
+		expected      entity.Content
 		expectedError error
 	}{
 		{
@@ -37,9 +37,9 @@ func TestUseCase_GetUserBanner(t *testing.T) {
 			offset:        0,
 			useLastVer:    false,
 			timer:         time.Now().Add(-6 * time.Minute),
-			repoResult:    entity.UserBannerResponse{},
+			repoResult:    entity.Content{},
 			repoError:     nil,
-			expected:      entity.UserBannerResponse{},
+			expected:      entity.Content{},
 			expectedError: nil,
 		},
 		{
@@ -50,13 +50,13 @@ func TestUseCase_GetUserBanner(t *testing.T) {
 			offset:     0,
 			useLastVer: false,
 			timer:      time.Now(),
-			repoResult: entity.UserBannerResponse{
+			repoResult: entity.Content{
 				Title: "some_title",
 				Text:  "some_text",
 				URL:   "some_url",
 			},
 			repoError: nil,
-			expected: entity.UserBannerResponse{
+			expected: entity.Content{
 				Title: "some_title",
 				Text:  "some_text",
 				URL:   "some_url",
@@ -71,13 +71,13 @@ func TestUseCase_GetUserBanner(t *testing.T) {
 			offset:     0,
 			useLastVer: true,
 			timer:      time.Now(),
-			repoResult: entity.UserBannerResponse{
+			repoResult: entity.Content{
 				Title: "some_title",
 				Text:  "some_text",
 				URL:   "some_url",
 			},
 			repoError: nil,
-			expected: entity.UserBannerResponse{
+			expected: entity.Content{
 				Title: "some_title",
 				Text:  "some_text",
 				URL:   "some_url",

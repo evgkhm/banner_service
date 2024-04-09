@@ -12,7 +12,7 @@ type UseCase struct {
 }
 
 var cache struct {
-	banner entity.UserBannerResponse
+	banner entity.Content
 	time.Time
 	mu sync.Mutex
 }
@@ -23,7 +23,7 @@ func New(r repository) *UseCase {
 	}
 }
 
-func (s *UseCase) GetUserBanner(ctx context.Context, tagID uint64, featureID uint64, useLastVersion bool) (entity.UserBannerResponse, error) {
+func (s *UseCase) GetUserBanner(ctx context.Context, tagID uint64, featureID uint64, useLastVersion bool) (entity.Content, error) {
 	if useLastVersion || time.Since(cache.Time) >= 5*time.Minute {
 		newBanner, err := s.repo.GetUserBanner(ctx, tagID, featureID, useLastVersion)
 		if err != nil {

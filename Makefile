@@ -15,8 +15,6 @@ test: ### run test
 	go test -v ./...
 
 MOCKS_DESTINATION=mocks
-# put the files with interfaces you'd like to mock in prerequisites
-# wildcards are allowed
 mocks: internal/usecase/deps.go internal/usecase/usecase.go
 	@echo "Generating mocks..."
 	@rm -rf $(MOCKS_DESTINATION)

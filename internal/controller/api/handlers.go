@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
-	"strings"
 )
 
 func (h *Handler) getUserBanner(ctx *gin.Context) {
@@ -87,21 +86,6 @@ func (h *Handler) getBanners(ctx *gin.Context) {
 	h.logger.Info("полученные баннеры", usersBanners)
 	ctx.JSON(http.StatusOK, usersBanners)
 	return
-}
-
-func parseTagIDs(tagIDsParam string) ([]uint64, error) {
-	var tagIDs []uint64
-
-	ids := strings.Split(tagIDsParam, ",")
-	for _, id := range ids {
-		tagID, err := strconv.ParseUint(id, 10, 64)
-		if err != nil {
-			return nil, err
-		}
-		tagIDs = append(tagIDs, tagID)
-	}
-
-	return tagIDs, nil
 }
 
 func (h *Handler) createBanner(ctx *gin.Context) {
