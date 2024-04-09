@@ -23,9 +23,9 @@ func New(r repository) *UseCase {
 	}
 }
 
-func (s *UseCase) GetUserBanner(ctx context.Context, tagID uint64, featureID uint64, useLastVersion bool) (entity.Content, error) {
+func (s *UseCase) GetUserBanner(ctx context.Context, tagID, featureID uint64, useLastVersion bool) (entity.Content, error) {
 	if useLastVersion || time.Since(cache.Time) >= 5*time.Minute {
-		newBanner, err := s.repo.GetUserBanner(ctx, tagID, featureID, useLastVersion)
+		newBanner, err := s.repo.GetUserBanner(ctx, tagID, featureID)
 		if err != nil {
 			return newBanner, err
 		}
@@ -43,7 +43,7 @@ func (s *UseCase) CreateBanner(ctx context.Context, banner *entity.Banner) (uint
 	return s.repo.CreateBanner(ctx, banner)
 }
 
-func (s *UseCase) GetBanners(ctx context.Context, tagID uint64, featureID uint64, limit uint64, offset uint64) ([]entity.BannersList, error) {
+func (s *UseCase) GetBanners(ctx context.Context, tagID, featureID, limit, offset uint64) ([]entity.BannersList, error) {
 	return s.repo.GetBanners(ctx, tagID, featureID, limit, offset)
 }
 

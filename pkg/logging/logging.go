@@ -26,7 +26,6 @@ func New(logFilePath, level string) (*Logger, error) {
 		l = zapcore.InfoLevel
 	}
 
-	//config := zap.NewProductionConfig()
 	config := zap.NewDevelopmentConfig()
 	config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	config.EncoderConfig.TimeKey = "timestamp"

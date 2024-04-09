@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 	"log"
+	"net/http"
 	"os"
 )
 
@@ -16,12 +17,12 @@ func middlewareForAdmin() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := c.GetHeader("token")
 		if token == "" {
-			respondWithError(c, 401, "Token required")
+			respondWithError(c, http.StatusUnauthorized, "Token required")
 			return
 		}
 
 		if token != requiredAdminToken {
-			respondWithError(c, 401, "Invalid token")
+			respondWithError(c, http.StatusForbidden, "Invalid token")
 			return
 		}
 	}
@@ -38,12 +39,12 @@ func middlewareForAdminOrUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := c.GetHeader("token")
 		if token == "" {
-			respondWithError(c, 401, "Token required")
+			respondWithError(c, http.StatusUnauthorized, "Token required")
 			return
 		}
 
 		if token != requiredUserToken && token != requiredAdminToken {
-			respondWithError(c, 401, "Invalid token")
+			respondWithError(c, http.StatusForbidden, "Invalid token")
 			return
 		}
 	}

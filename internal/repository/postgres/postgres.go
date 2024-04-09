@@ -10,14 +10,7 @@ import (
 	"time"
 )
 
-const (
-	maxPaginationLimit = 10
-
-	sortAscending  string = "ASC"
-	sortDescending string = "DESC"
-)
-
-var ErrorUserBannerNotFound = errors.New("баннер не найден")
+var ErrUserBanner = errors.New("баннер не найден")
 
 type Repo struct {
 	db *sqlx.DB
@@ -29,7 +22,7 @@ func New(db *sqlx.DB) *Repo {
 	}
 }
 
-func (r *Repo) GetUserBanner(ctx context.Context, tagID uint64, featureID uint64, useLastVersion bool) (entity.Content, error) {
+func (r *Repo) GetUserBanner(ctx context.Context, tagID, featureID uint64) (entity.Content, error) {
 	data := entity.Content{}
 
 	beginx, err := r.db.BeginTx(ctx, nil)
@@ -48,7 +41,7 @@ func (r *Repo) GetUserBanner(ctx context.Context, tagID uint64, featureID uint64
 			if errRollBack != nil {
 				return entity.Content{}, errRollBack
 			}
-			return entity.Content{}, ErrorUserBannerNotFound
+			return entity.Content{}, ErrUserBanner
 		}
 		errRollBack := beginx.Rollback()
 		if errRollBack != nil {
@@ -64,7 +57,7 @@ func (r *Repo) GetUserBanner(ctx context.Context, tagID uint64, featureID uint64
 	return data, nil
 }
 
-func (r *Repo) GetBanners(ctx context.Context, tagID uint64, featureID uint64, limit uint64, offset uint64) ([]entity.BannersList, error) {
+func (r *Repo) GetBanners(ctx context.Context, tagID, featureID, limit, offset uint64) ([]entity.BannersList, error) {
 	var banners []entity.BannersList
 	tr, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -145,8 +138,8 @@ func (r *Repo) CreateBanner(ctx context.Context, banner *entity.Banner) (uint64,
 	}
 
 	// insert into tag slice of tagIDs
-	var valueStrings []string
-	var valueArgs []interface{}
+	valueStrings := make([]string, 0, len(banner.TagID))
+	valueArgs := make([]interface{}, 0, len(banner.TagID))
 	for _, tagID := range banner.TagID {
 		valueStrings = append(valueStrings, "(?, ?, ?)")
 		valueArgs = append(valueArgs, tagID, now, now)
@@ -155,6 +148,7 @@ func (r *Repo) CreateBanner(ctx context.Context, banner *entity.Banner) (uint64,
 	query := "INSERT INTO tag (id, created_at, updated_at) VALUES " +
 		sqlx.Rebind(sqlx.DOLLAR, justString) +
 		" ON CONFLICT DO NOTHING"
+
 	_, errInsertTag := beginx.ExecContext(ctx, query, valueArgs...)
 	if errInsertTag != nil {
 		errRollBack := beginx.Rollback()
@@ -176,8 +170,8 @@ func (r *Repo) CreateBanner(ctx context.Context, banner *entity.Banner) (uint64,
 	}
 
 	// insert into banner_tag
-	var valueStringsBannerTags []string
-	var valueArgsBannerTags []interface{}
+	valueStringsBannerTags := make([]string, 0, len(banner.TagID))
+	valueArgsBannerTags := make([]interface{}, 0, len(banner.TagID))
 	for _, tagID := range banner.TagID {
 		valueStringsBannerTags = append(valueStringsBannerTags, "(?, ?)")
 		valueArgsBannerTags = append(valueArgsBannerTags, newID, tagID)
@@ -220,8 +214,8 @@ func (r *Repo) UpdateBanner(ctx context.Context, bannerID uint64, banner *entity
 		return errExec
 	}
 
-	var valueStringsTags []string
-	var valueArgsTags []interface{}
+	valueStringsTags := make([]string, 0, len(banner.TagID))
+	valueArgsTags := make([]interface{}, 0, len(banner.TagID))
 	for _, tagID := range banner.TagID {
 		valueStringsTags = append(valueStringsTags, "(?, ?, ?)")
 		valueArgsTags = append(valueArgsTags, tagID, now, now)
@@ -249,8 +243,8 @@ func (r *Repo) UpdateBanner(ctx context.Context, bannerID uint64, banner *entity
 	}
 
 	// insert into banner_tag
-	var valueStringsBannerTags []string
-	var valueArgsBannerTags []interface{}
+	valueStringsBannerTags := make([]string, 0, len(banner.TagID))
+	valueArgsBannerTags := make([]interface{}, 0, len(banner.TagID))
 	for _, tagID := range banner.TagID {
 		valueStringsBannerTags = append(valueStringsBannerTags, "(?, ?)")
 		valueArgsBannerTags = append(valueArgsBannerTags, bannerID, tagID)

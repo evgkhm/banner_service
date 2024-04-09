@@ -34,7 +34,7 @@ func (h *Handler) getUserBanner(ctx *gin.Context) {
 
 	userBannerResponse, errGetUserBanner := h.usecase.GetUserBanner(ctx, tagID, featureID, useLastVerson)
 	if errGetUserBanner != nil {
-		if errors.Is(errGetUserBanner, postgres.ErrorUserBannerNotFound) {
+		if errors.Is(errGetUserBanner, postgres.ErrUserBanner) {
 			writeErrorResponse(ctx, http.StatusNotFound, errGetUserBanner.Error())
 			return
 		}
@@ -45,7 +45,6 @@ func (h *Handler) getUserBanner(ctx *gin.Context) {
 
 	h.logger.Info("user banner received", userBannerResponse)
 	ctx.JSON(http.StatusOK, userBannerResponse)
-	return
 }
 
 func (h *Handler) getBanners(ctx *gin.Context) {
@@ -85,7 +84,6 @@ func (h *Handler) getBanners(ctx *gin.Context) {
 	}
 	h.logger.Info("полученные баннеры", usersBanners)
 	ctx.JSON(http.StatusOK, usersBanners)
-	return
 }
 
 func (h *Handler) createBanner(ctx *gin.Context) {
@@ -106,7 +104,6 @@ func (h *Handler) createBanner(ctx *gin.Context) {
 
 	h.logger.Info("banner created", bannerID)
 	writePositiveResponse(ctx, http.StatusCreated, bannerID)
-	return
 }
 
 func (h *Handler) updateBanner(ctx *gin.Context) {
@@ -132,7 +129,6 @@ func (h *Handler) updateBanner(ctx *gin.Context) {
 	}
 	h.logger.Info("banner updated", bannerID)
 	ctx.JSON(http.StatusOK, "OK")
-	return
 }
 
 func (h *Handler) deleteBanner(ctx *gin.Context) {
@@ -151,5 +147,4 @@ func (h *Handler) deleteBanner(ctx *gin.Context) {
 	}
 	h.logger.Info("Баннер успешно удален")
 	ctx.JSON(http.StatusNoContent, "Баннер успешно удален")
-	return
 }

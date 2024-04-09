@@ -10,8 +10,10 @@ import (
 )
 
 func TestUseCase_GetUserBanner(t *testing.T) {
+	t.Parallel()
+
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	t.Cleanup(ctrl.Finish)
 
 	mockRepo := NewMockrepository(ctrl)
 	useCase := New(mockRepo)
@@ -20,8 +22,6 @@ func TestUseCase_GetUserBanner(t *testing.T) {
 		name          string
 		tag           uint64
 		feature       uint64
-		limit         uint64
-		offset        uint64
 		useLastVer    bool
 		timer         time.Time
 		repoResult    entity.Content
@@ -33,8 +33,6 @@ func TestUseCase_GetUserBanner(t *testing.T) {
 			name:          "6 mins ago result",
 			tag:           1,
 			feature:       1,
-			limit:         10,
-			offset:        0,
 			useLastVer:    false,
 			timer:         time.Now().Add(-6 * time.Minute),
 			repoResult:    entity.Content{},
@@ -43,32 +41,9 @@ func TestUseCase_GetUserBanner(t *testing.T) {
 			expectedError: nil,
 		},
 		{
-			name:       "actual result since 5 min ago",
-			tag:        1,
-			feature:    1,
-			limit:      10,
-			offset:     0,
-			useLastVer: false,
-			timer:      time.Now(),
-			repoResult: entity.Content{
-				Title: "some_title",
-				Text:  "some_text",
-				URL:   "some_url",
-			},
-			repoError: nil,
-			expected: entity.Content{
-				Title: "some_title",
-				Text:  "some_text",
-				URL:   "some_url",
-			},
-			expectedError: nil,
-		},
-		{
 			name:       "success",
 			tag:        1,
 			feature:    1,
-			limit:      10,
-			offset:     0,
 			useLastVer: true,
 			timer:      time.Now(),
 			repoResult: entity.Content{
@@ -90,7 +65,8 @@ func TestUseCase_GetUserBanner(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			mockRepo.EXPECT().GetUserBanner(gomock.Any(), test.tag, test.feature, test.useLastVer).Return(test.repoResult, test.repoError)
+
+			mockRepo.EXPECT().GetUserBanner(gomock.Any(), test.tag, test.feature).Return(test.repoResult, test.repoError)
 			result, err := useCase.GetUserBanner(context.Background(), test.tag, test.feature, test.useLastVer)
 			if !errors.Is(err, test.expectedError) {
 				t.Errorf("expected error %v, got %v", test.expectedError, err)

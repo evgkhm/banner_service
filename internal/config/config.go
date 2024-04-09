@@ -25,12 +25,12 @@ type (
 		Password string `env:"POSTGRES_PASSWORD" yaml:"password"`
 		Host     string `env:"POSTGRES_HOST"     yaml:"host"`
 		Port     uint16 `env:"POSTGRES_PORT"     yaml:"port"`
-		DB       string `env:"POSTGRES_DB"       yaml:"DB"`
-		SSLMode  string `env:"POSTGRES_SSL_MODE" yaml:"SSLMode"`
+		DB       string `env:"POSTGRES_DB"       yaml:"db"`
+		SSLMode  string `env:"POSTGRES_SSL_MODE" yaml:"ssl_mode"`
 	}
 
 	LoggerConfig struct {
-		LogFilePath string `env:"LOG_FILE_PATH" yaml:"logFilePath"`
+		LogFilePath string `env:"LOG_FILE_PATH" yaml:"log_file_path"`
 		Level       string `env:"LOG_LVL"       yaml:"level"`
 	}
 )

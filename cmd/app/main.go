@@ -8,6 +8,7 @@ import (
 	"banner_service/pkg/httpserver"
 	"banner_service/pkg/logging"
 	"context"
+	"github.com/jmoiron/sqlx"
 	"log"
 	"os"
 	"os/signal"
@@ -24,14 +25,19 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer func() { _ = logger.Sync() }()
+	defer func() { err = logger.Sync() }()
 
 	ctx := context.Background()
 	db, err := postgres.NewDB(ctx, cfg.PG)
 	if err != nil {
 		logger.Fatalf("failed to connect to postgres db: %s", err)
 	}
-	defer db.Close()
+	defer func(db *sqlx.DB) {
+		err := postgres.CloseDB(db)
+		if err != nil {
+			logger.Fatalf("failed to close postgres db: %s", err)
+		}
+	}(db)
 
 	repo := postgres.New(db)
 

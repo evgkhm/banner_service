@@ -21,9 +21,14 @@ import (
 )
 
 func TestGetUserBanner(t *testing.T) {
+	t.Parallel()
+
 	// Load .env file
 	re := regexp.MustCompile(`^(.*` + "banner_service" + `)`)
-	cwd, _ := os.Getwd()
+	cwd, errGetWd := os.Getwd()
+	if errGetWd != nil {
+		t.Errorf("failed to get current working directory: %v", errGetWd)
+	}
 	rootPath := re.Find([]byte(cwd))
 	err := godotenv.Load(string(rootPath) + `/.env`)
 	if err != nil {
@@ -47,7 +52,6 @@ func TestGetUserBanner(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	//defer db.Close()
 
 	repo := postgres.New(db)
 
@@ -74,13 +78,14 @@ func TestGetUserBanner(t *testing.T) {
 		require.NoError(t, err)
 		require.NotZero(t, createBanner)
 
-		req, err := http.NewRequest("GET", "http://localhost:8080/user_banner?tag_id=1&feature_id=1&use_last_revision=false", nil)
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080/user_banner?tag_id=1&feature_id=1&use_last_revision=false", http.NoBody)
 		require.NoError(t, err)
 
 		req.Header.Set("token", os.Getenv("API_TOKEN"))
 
 		resp, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
+		t.Cleanup(func() { _ = resp.Body.Close() })
 
 		require.Equal(t, http.StatusOK, resp.StatusCode)
 
@@ -111,13 +116,14 @@ func TestGetUserBanner(t *testing.T) {
 		require.NoError(t, err)
 		require.NotZero(t, createBanner)
 
-		req, err := http.NewRequest("GET", "http://localhost:8080/user_banner", nil)
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080/user_banner", http.NoBody)
 		require.NoError(t, err)
 
 		req.Header.Set("token", os.Getenv("API_TOKEN"))
 
 		resp, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
+		t.Cleanup(func() { _ = resp.Body.Close() })
 
 		require.Equal(t, http.StatusBadRequest, resp.StatusCode)
 	})
@@ -140,15 +146,16 @@ func TestGetUserBanner(t *testing.T) {
 		require.NoError(t, err)
 		require.NotZero(t, createBanner)
 
-		req, err := http.NewRequest("GET", "http://localhost:8080/user_banner?tag_id=1&feature_id=1&use_last_revision=false", nil)
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080/user_banner?tag_id=1&feature_id=1&use_last_revision=false", http.NoBody)
 		require.NoError(t, err)
 
 		req.Header.Set("token", "user_token_not_right")
 
 		resp, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
+		t.Cleanup(func() { _ = resp.Body.Close() })
 
-		require.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+		require.Equal(t, http.StatusForbidden, resp.StatusCode)
 	})
 
 	t.Run("Баннер не найден", func(t *testing.T) {
@@ -169,13 +176,14 @@ func TestGetUserBanner(t *testing.T) {
 		require.NoError(t, err)
 		require.NotZero(t, createBanner)
 
-		req, err := http.NewRequest("GET", "http://localhost:8080/user_banner?tag_id=10000&feature_id=10000&use_last_revision=true", nil)
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080/user_banner?tag_id=10000&feature_id=10000&use_last_revision=true", http.NoBody)
 		require.NoError(t, err)
 
 		req.Header.Set("token", os.Getenv("API_TOKEN"))
 
 		resp, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
+		t.Cleanup(func() { _ = resp.Body.Close() })
 
 		require.Equal(t, http.StatusNotFound, resp.StatusCode)
 	})
