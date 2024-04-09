@@ -3,8 +3,10 @@ package usecase
 import (
 	"banner_service/internal/entity"
 	"context"
+	_ "github.com/golang/mock/mockgen/model"
 )
 
+//go:generate mockgen -source=$GOFILE -destination=mocks_test.go -package=$GOPACKAGE --build_flags=--mod=mod
 type repository interface {
 	GetUserBanner(ctx context.Context, tagID uint64, featureID uint64, useLastVersion bool) (entity.UserBannerResponse, error)
 	CreateBanner(ctx context.Context, banner *entity.Banner) (uint64, error)

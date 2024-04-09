@@ -3,10 +3,18 @@ package usecase
 import (
 	"banner_service/internal/entity"
 	"context"
+	"sync"
+	"time"
 )
 
 type UseCase struct {
 	repo repository
+}
+
+var cache struct {
+	banner entity.UserBannerResponse
+	time.Time
+	mu sync.Mutex
 }
 
 func New(r repository) *UseCase {
@@ -16,7 +24,19 @@ func New(r repository) *UseCase {
 }
 
 func (s *UseCase) GetUserBanner(ctx context.Context, tagID uint64, featureID uint64, useLastVersion bool) (entity.UserBannerResponse, error) {
-	return s.repo.GetUserBanner(ctx, tagID, featureID, useLastVersion)
+	if useLastVersion || time.Since(cache.Time) >= 5*time.Minute {
+		newBanner, err := s.repo.GetUserBanner(ctx, tagID, featureID, useLastVersion)
+		if err != nil {
+			return newBanner, err
+		}
+
+		cache.mu.Lock()
+		cache.banner = newBanner
+		cache.Time = time.Now()
+		cache.mu.Unlock()
+		return cache.banner, nil
+	}
+	return cache.banner, nil
 }
 
 func (s *UseCase) CreateBanner(ctx context.Context, banner *entity.Banner) (uint64, error) {
