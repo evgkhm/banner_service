@@ -1,8 +1,0 @@
-pkg/logging/logging.go:54:17: pass []any as any to func l.logger.Debug func(args ...interface{}) (asasalint)
-pkg/logging/logging.go:58:16: pass []any as any to func l.logger.Info func(args ...interface{}) (asasalint)
-pkg/logging/logging.go:62:25: pass []any as any to func l.logger.Infof func(template string, args ...interface{}) (asasalint)
-pkg/logging/logging.go:66:16: pass []any as any to func l.logger.Warn func(args ...interface{}) (asasalint)
-pkg/logging/logging.go:70:17: pass []any as any to func l.logger.Error func(args ...interface{}) (asasalint)
-pkg/logging/logging.go:74:26: pass []any as any to func l.logger.Errorf func(template string, args ...interface{}) (asasalint)
-pkg/logging/logging.go:78:17: pass []any as any to func l.logger.Fatal func(args ...interface{}) (asasalint)
-pkg/logging/logging.go:82:26: pass []any as any to func l.logger.Fatalf func(template string, args ...interface{}) (asasalint)
