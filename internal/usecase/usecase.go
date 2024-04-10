@@ -11,11 +11,13 @@ type UseCase struct {
 	repo repository
 }
 
-var cache struct {
-	banner entity.Content
-	time.Time
-	mu sync.Mutex
+type CacheBanner struct {
+	Banner entity.Content
+	Timer  time.Time
+	mu     sync.Mutex
 }
+
+var CacheUserBanner = CacheBanner{Banner: entity.Content{}, Timer: time.Now()}
 
 func New(r repository) *UseCase {
 	return &UseCase{
@@ -23,20 +25,36 @@ func New(r repository) *UseCase {
 	}
 }
 
+type RealTimeProvider struct{}
+
+func (RealTimeProvider) Now() time.Time {
+	return time.Now()
+}
+
+type FakeTimeProvider struct {
+	currentTime time.Time
+}
+
+func (f FakeTimeProvider) Now() time.Time {
+	return f.currentTime
+}
+
 func (s *UseCase) GetUserBanner(ctx context.Context, tagID, featureID uint64, useLastVersion bool) (entity.Content, error) {
-	if useLastVersion || time.Since(cache.Time) >= 5*time.Minute {
+	timeProvider := RealTimeProvider{}
+
+	if useLastVersion || timeProvider.Now().Sub(CacheUserBanner.Timer) >= 5*time.Minute {
 		newBanner, err := s.repo.GetUserBanner(ctx, tagID, featureID)
 		if err != nil {
 			return newBanner, err
 		}
 
-		cache.mu.Lock()
-		cache.banner = newBanner
-		cache.Time = time.Now()
-		cache.mu.Unlock()
-		return cache.banner, nil
+		CacheUserBanner.mu.Lock()
+		CacheUserBanner.Banner = newBanner
+		CacheUserBanner.Timer = timeProvider.Now()
+		CacheUserBanner.mu.Unlock()
+		return CacheUserBanner.Banner, nil
 	}
-	return cache.banner, nil
+	return CacheUserBanner.Banner, nil
 }
 
 func (s *UseCase) CreateBanner(ctx context.Context, banner *entity.Banner) (uint64, error) {

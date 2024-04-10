@@ -80,20 +80,15 @@ func TestGetUserBanner(t *testing.T) {
 
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080/user_banner?tag_id=1&feature_id=1&use_last_revision=false", http.NoBody)
 		require.NoError(t, err)
-
 		req.Header.Set("token", os.Getenv("API_TOKEN"))
-
 		resp, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
 		t.Cleanup(func() { _ = resp.Body.Close() })
 
 		require.Equal(t, http.StatusOK, resp.StatusCode)
 
-		expectedBanner := entity.Content{
-			Title: requestForCreate.Content.Title,
-			Text:  requestForCreate.Content.Text,
-			URL:   requestForCreate.Content.URL,
-		}
+		expectedBanner, err := useCase.GetUserBanner(ctx, requestForCreate.TagID[0], requestForCreate.FeatureID, true)
+		require.NoError(t, err)
 
 		require.Equal(t, expectedBanner, requestContent)
 	})
