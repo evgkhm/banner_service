@@ -49,6 +49,30 @@ func TestUseCase_GetUserBanner(t *testing.T) {
 			expectedError: nil,
 		},
 		{
+			name:       "6 mins ago result but use last version",
+			tag:        5,
+			feature:    66,
+			useLastVer: true,
+			RepoBannerResult: CacheBanner{
+				Timer: fakeTime,
+				Banner: entity.Content{
+					Title: "some_title",
+					Text:  "some_text",
+					URL:   "some_url",
+				},
+			},
+			repoError: nil,
+			CacheBannerExpected: CacheBanner{
+				Timer: fakeTime,
+				Banner: entity.Content{
+					Title: "some_title",
+					Text:  "some_text",
+					URL:   "some_url",
+				},
+			},
+			expectedError: nil,
+		},
+		{
 			name:       "success",
 			tag:        5,
 			feature:    66,
