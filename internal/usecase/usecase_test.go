@@ -21,15 +21,19 @@ func TestUseCase_GetUserBanner(t *testing.T) {
 	mockRepo := NewMockrepository(ctrl)
 	useCase := New(mockRepo)
 
+	type banner struct {
+		Banner entity.Content
+		Timer  time.Time
+	}
+
 	tests := []struct {
-		name       string
-		tag        uint64
-		feature    uint64
-		useLastVer bool
-		//timer            time.Time
-		RepoBannerResult    CacheBanner
+		name                string
+		tag                 uint64
+		feature             uint64
+		useLastVer          bool
+		RepoBannerResult    banner
 		repoError           error
-		CacheBannerExpected CacheBanner
+		CacheBannerExpected banner
 		expectedError       error
 	}{
 		{
@@ -37,12 +41,12 @@ func TestUseCase_GetUserBanner(t *testing.T) {
 			tag:        1,
 			feature:    1,
 			useLastVer: false,
-			RepoBannerResult: CacheBanner{
+			RepoBannerResult: banner{
 				Timer:  fakeTime,
 				Banner: entity.Content{},
 			},
 			repoError: nil,
-			CacheBannerExpected: CacheBanner{
+			CacheBannerExpected: banner{
 				Timer:  fakeTime,
 				Banner: entity.Content{},
 			},
@@ -53,7 +57,7 @@ func TestUseCase_GetUserBanner(t *testing.T) {
 			tag:        5,
 			feature:    66,
 			useLastVer: true,
-			RepoBannerResult: CacheBanner{
+			RepoBannerResult: banner{
 				Timer: fakeTime,
 				Banner: entity.Content{
 					Title: "some_title",
@@ -62,7 +66,7 @@ func TestUseCase_GetUserBanner(t *testing.T) {
 				},
 			},
 			repoError: nil,
-			CacheBannerExpected: CacheBanner{
+			CacheBannerExpected: banner{
 				Timer: fakeTime,
 				Banner: entity.Content{
 					Title: "some_title",
@@ -77,7 +81,7 @@ func TestUseCase_GetUserBanner(t *testing.T) {
 			tag:        5,
 			feature:    66,
 			useLastVer: true,
-			RepoBannerResult: CacheBanner{
+			RepoBannerResult: banner{
 				Timer: time.Now(),
 				Banner: entity.Content{
 					Title: "some_title",
@@ -86,7 +90,7 @@ func TestUseCase_GetUserBanner(t *testing.T) {
 				},
 			},
 			repoError: nil,
-			CacheBannerExpected: CacheBanner{
+			CacheBannerExpected: banner{
 				Timer: time.Now(),
 				Banner: entity.Content{
 					Title: "some_title",

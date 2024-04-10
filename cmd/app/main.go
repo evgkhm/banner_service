@@ -30,12 +30,12 @@ func main() {
 	ctx := context.Background()
 	db, err := postgres.NewDB(ctx, cfg.PG)
 	if err != nil {
-		logger.Fatalf("failed to connect to postgres db: %s", err)
+		logger.Fatalf("app: main: postgres.NewDB: %v", err)
 	}
 	defer func(db *sqlx.DB) {
 		err := postgres.CloseDB(db)
 		if err != nil {
-			logger.Fatalf("failed to close postgres db: %s", err)
+			logger.Fatalf("app: main: postgres.CloseDB: %v", err)
 		}
 	}(db)
 
@@ -55,7 +55,7 @@ func main() {
 	case s := <-interrupt:
 		logger.Info("app: main: signal: " + s.String())
 	case err = <-httpServer.Notify():
-		logger.Errorf("app - Run - httpServer.Notify: %v", err)
+		logger.Errorf("app: main: httpServer.Notify: %v", err)
 	}
 
 	// Shutdown
