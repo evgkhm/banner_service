@@ -1,7 +1,3 @@
-internal/repository/postgres/postgres.go:148:11: G202: SQL string concatenation (gosec)
-internal/repository/postgres/postgres.go:148:11: G202: SQL string concatenation (gosec)
-internal/repository/postgres/postgres.go:224:11: G202: SQL string concatenation (gosec)
-internal/repository/postgres/postgres.go:224:11: G202: SQL string concatenation (gosec)
 pkg/logging/logging.go:54:17: pass []any as any to func l.logger.Debug func(args ...interface{}) (asasalint)
 pkg/logging/logging.go:58:16: pass []any as any to func l.logger.Info func(args ...interface{}) (asasalint)
 pkg/logging/logging.go:62:25: pass []any as any to func l.logger.Infof func(template string, args ...interface{}) (asasalint)

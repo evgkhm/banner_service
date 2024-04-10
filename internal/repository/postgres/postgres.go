@@ -145,9 +145,17 @@ func (r *Repo) CreateBanner(ctx context.Context, banner *entity.Banner) (uint64,
 		valueArgs = append(valueArgs, tagID, now, now)
 	}
 	justString := strings.Join(valueStrings, ", ")
-	query := "INSERT INTO tag (id, created_at, updated_at) VALUES " +
-		sqlx.Rebind(sqlx.DOLLAR, justString) +
-		" ON CONFLICT DO NOTHING"
+	rebindString := sqlx.Rebind(sqlx.DOLLAR, justString)
+
+	query, _, sqlxInErr := sqlx.In("INSERT INTO tag (id, created_at, updated_at) VALUES " + rebindString +
+		" ON CONFLICT DO NOTHING")
+	if sqlxInErr != nil {
+		errRollBack := beginx.Rollback()
+		if errRollBack != nil {
+			return 0, errRollBack
+		}
+		return 0, sqlxInErr
+	}
 
 	_, errInsertTag := beginx.ExecContext(ctx, query, valueArgs...)
 	if errInsertTag != nil {
@@ -221,8 +229,18 @@ func (r *Repo) UpdateBanner(ctx context.Context, bannerID uint64, banner *entity
 		valueArgsTags = append(valueArgsTags, tagID, now, now)
 	}
 	justString := strings.Join(valueStringsTags, ", ")
-	query := "INSERT INTO tag (id, created_at, updated_at) VALUES " +
-		sqlx.Rebind(sqlx.DOLLAR, justString) + " ON CONFLICT DO NOTHING"
+	rebindString := sqlx.Rebind(sqlx.DOLLAR, justString)
+
+	query, _, sqlxInErr := sqlx.In("INSERT INTO tag (id, created_at, updated_at) VALUES " + rebindString +
+		" ON CONFLICT DO NOTHING")
+	if sqlxInErr != nil {
+		errRollBack := tr.Rollback()
+		if errRollBack != nil {
+			return errRollBack
+		}
+		return sqlxInErr
+	}
+
 	_, errInsertBannerTag := tr.ExecContext(ctx, query, valueArgsTags...)
 	if errInsertBannerTag != nil {
 		errRollBack := tr.Rollback()
