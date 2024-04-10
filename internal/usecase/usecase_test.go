@@ -31,56 +31,19 @@ func TestUseCase_GetUserBanner(t *testing.T) {
 		tag                 uint64
 		feature             uint64
 		useLastVer          bool
+		isUserRequest       bool
 		RepoBannerResult    banner
+		isActiveBanner      bool
 		repoError           error
 		CacheBannerExpected banner
 		expectedError       error
 	}{
 		{
-			name:       "6 mins ago result",
-			tag:        1,
-			feature:    1,
-			useLastVer: false,
-			RepoBannerResult: banner{
-				Timer:  fakeTime,
-				Banner: entity.Content{},
-			},
-			repoError: nil,
-			CacheBannerExpected: banner{
-				Timer:  fakeTime,
-				Banner: entity.Content{},
-			},
-			expectedError: nil,
-		},
-		{
-			name:       "6 mins ago result but use last version",
-			tag:        5,
-			feature:    66,
-			useLastVer: true,
-			RepoBannerResult: banner{
-				Timer: fakeTime,
-				Banner: entity.Content{
-					Title: "some_title",
-					Text:  "some_text",
-					URL:   "some_url",
-				},
-			},
-			repoError: nil,
-			CacheBannerExpected: banner{
-				Timer: fakeTime,
-				Banner: entity.Content{
-					Title: "some_title",
-					Text:  "some_text",
-					URL:   "some_url",
-				},
-			},
-			expectedError: nil,
-		},
-		{
-			name:       "success",
-			tag:        5,
-			feature:    66,
-			useLastVer: true,
+			name:          "admin request with no active banner",
+			tag:           1,
+			feature:       1,
+			useLastVer:    true,
+			isUserRequest: false,
 			RepoBannerResult: banner{
 				Timer: time.Now(),
 				Banner: entity.Content{
@@ -89,7 +52,72 @@ func TestUseCase_GetUserBanner(t *testing.T) {
 					URL:   "some_url",
 				},
 			},
-			repoError: nil,
+			isActiveBanner: false,
+			repoError:      nil,
+			CacheBannerExpected: banner{
+				Timer: time.Now(),
+				Banner: entity.Content{
+					Title: "some_title",
+					Text:  "some_text",
+					URL:   "some_url",
+				},
+			},
+			expectedError: nil,
+		},
+		{
+			name:          "6 mins ago result but use last version",
+			tag:           1,
+			feature:       1,
+			useLastVer:    true,
+			isUserRequest: false,
+			RepoBannerResult: banner{
+				Timer: fakeTime,
+				Banner: entity.Content{
+					Title: "some_title",
+					Text:  "some_text",
+					URL:   "some_url",
+				},
+			},
+			isActiveBanner: true,
+			repoError:      nil,
+			CacheBannerExpected: banner{
+				Timer: fakeTime,
+				Banner: entity.Content{
+					Title: "some_title",
+					Text:  "some_text",
+					URL:   "some_url",
+				},
+			},
+			expectedError: nil,
+		},
+		{
+			name:                "user request with no active banner",
+			tag:                 1,
+			feature:             1,
+			useLastVer:          true,
+			isUserRequest:       true,
+			RepoBannerResult:    banner{},
+			isActiveBanner:      false,
+			repoError:           nil,
+			CacheBannerExpected: banner{},
+			expectedError:       nil,
+		},
+		{
+			name:          "admin request with active banner",
+			tag:           1,
+			feature:       1,
+			useLastVer:    true,
+			isUserRequest: false,
+			RepoBannerResult: banner{
+				Timer: time.Now(),
+				Banner: entity.Content{
+					Title: "some_title",
+					Text:  "some_text",
+					URL:   "some_url",
+				},
+			},
+			isActiveBanner: true,
+			repoError:      nil,
 			CacheBannerExpected: banner{
 				Timer: time.Now(),
 				Banner: entity.Content{
@@ -106,8 +134,8 @@ func TestUseCase_GetUserBanner(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			mockRepo.EXPECT().GetUserBanner(gomock.Any(), test.tag, test.feature).Return(test.RepoBannerResult.Banner, test.repoError).AnyTimes()
-			result, err := useCase.GetUserBanner(context.Background(), test.tag, test.feature, test.useLastVer)
+			mockRepo.EXPECT().GetUserBanner(gomock.Any(), test.tag, test.feature).Return(test.RepoBannerResult.Banner, test.isActiveBanner, test.repoError).AnyTimes()
+			result, err := useCase.GetUserBanner(context.Background(), test.tag, test.feature, test.useLastVer, test.isUserRequest)
 			if !errors.Is(err, test.expectedError) {
 				t.Errorf("expected error %v, got %v", test.expectedError, err)
 			}

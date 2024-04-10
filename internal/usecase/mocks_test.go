@@ -8,6 +8,7 @@ import (
 	entity "banner_service/internal/entity"
 	context "context"
 	reflect "reflect"
+	time "time"
 
 	gomock "github.com/golang/mock/gomock"
 )
@@ -80,12 +81,13 @@ func (mr *MockrepositoryMockRecorder) GetBanners(ctx, tagID, featureID, limit, o
 }
 
 // GetUserBanner mocks base method.
-func (m *Mockrepository) GetUserBanner(ctx context.Context, tagID, featureID uint64) (entity.Content, error) {
+func (m *Mockrepository) GetUserBanner(ctx context.Context, tagID, featureID uint64) (entity.Content, bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserBanner", ctx, tagID, featureID)
 	ret0, _ := ret[0].(entity.Content)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(bool)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetUserBanner indicates an expected call of GetUserBanner.
@@ -106,4 +108,41 @@ func (m *Mockrepository) UpdateBanner(ctx context.Context, bannerID uint64, bann
 func (mr *MockrepositoryMockRecorder) UpdateBanner(ctx, bannerID, banner interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBanner", reflect.TypeOf((*Mockrepository)(nil).UpdateBanner), ctx, bannerID, banner)
+}
+
+// MockTimeProvider is a mock of TimeProvider interface.
+type MockTimeProvider struct {
+	ctrl     *gomock.Controller
+	recorder *MockTimeProviderMockRecorder
+}
+
+// MockTimeProviderMockRecorder is the mock recorder for MockTimeProvider.
+type MockTimeProviderMockRecorder struct {
+	mock *MockTimeProvider
+}
+
+// NewMockTimeProvider creates a new mock instance.
+func NewMockTimeProvider(ctrl *gomock.Controller) *MockTimeProvider {
+	mock := &MockTimeProvider{ctrl: ctrl}
+	mock.recorder = &MockTimeProviderMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockTimeProvider) EXPECT() *MockTimeProviderMockRecorder {
+	return m.recorder
+}
+
+// Now mocks base method.
+func (m *MockTimeProvider) Now() time.Time {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Now")
+	ret0, _ := ret[0].(time.Time)
+	return ret0
+}
+
+// Now indicates an expected call of Now.
+func (mr *MockTimeProviderMockRecorder) Now() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Now", reflect.TypeOf((*MockTimeProvider)(nil).Now))
 }

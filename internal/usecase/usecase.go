@@ -39,11 +39,14 @@ func (f FakeTimeProvider) Now() time.Time {
 	return f.currentTime
 }
 
-func (s *UseCase) GetUserBanner(ctx context.Context, tagID, featureID uint64, useLastVersion bool) (entity.Content, error) {
+func (s *UseCase) GetUserBanner(ctx context.Context, tagID, featureID uint64, useLastVersion bool, isUserRequest bool) (entity.Content, error) {
 	timeProvider := RealTimeProvider{}
+	var newBanner entity.Content
+	var isActive bool
+	var err error
 
 	if useLastVersion || timeProvider.Now().Sub(CacheUserBanner.Timer) >= 5*time.Minute {
-		newBanner, err := s.repo.GetUserBanner(ctx, tagID, featureID)
+		newBanner, isActive, err = s.repo.GetUserBanner(ctx, tagID, featureID)
 		if err != nil {
 			return newBanner, err
 		}
@@ -52,8 +55,12 @@ func (s *UseCase) GetUserBanner(ctx context.Context, tagID, featureID uint64, us
 		CacheUserBanner.Banner = newBanner
 		CacheUserBanner.Timer = timeProvider.Now()
 		CacheUserBanner.mu.Unlock()
-		return CacheUserBanner.Banner, nil
 	}
+
+	if isActive == false && isUserRequest {
+		return entity.Content{}, nil
+	}
+
 	return CacheUserBanner.Banner, nil
 }
 

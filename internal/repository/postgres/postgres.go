@@ -22,39 +22,40 @@ func New(db *sqlx.DB) *Repo {
 	}
 }
 
-func (r *Repo) GetUserBanner(ctx context.Context, tagID, featureID uint64) (entity.Content, error) {
+func (r *Repo) GetUserBanner(ctx context.Context, tagID, featureID uint64) (entity.Content, bool, error) {
 	data := entity.Content{}
+	var isActive bool
 
 	beginx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return entity.Content{}, err
+		return entity.Content{}, false, err
 	}
 
-	query := `SELECT b.title, b.text, b.url FROM banner b
+	query := `SELECT b.title, b.text, b.url, b.is_active FROM banner b
 			JOIN banner_tag bg ON bg.banner_id = b.id
 			WHERE bg.tag_id = $1 AND b.feature_id = $2`
 
-	errRow := beginx.QueryRowContext(ctx, query, tagID, featureID).Scan(&data.Title, &data.Text, &data.URL)
+	errRow := beginx.QueryRowContext(ctx, query, tagID, featureID).Scan(&data.Title, &data.Text, &data.URL, &isActive)
 	if errRow != nil {
 		if errors.Is(errRow, sql.ErrNoRows) {
 			errRollBack := beginx.Rollback()
 			if errRollBack != nil {
-				return entity.Content{}, errRollBack
+				return entity.Content{}, false, errRollBack
 			}
-			return entity.Content{}, ErrUserBanner
+			return entity.Content{}, false, ErrUserBanner
 		}
 		errRollBack := beginx.Rollback()
 		if errRollBack != nil {
-			return entity.Content{}, errRollBack
+			return entity.Content{}, false, errRollBack
 		}
-		return entity.Content{}, errRow
+		return entity.Content{}, false, errRow
 	}
 
 	errCommit := beginx.Commit()
 	if errCommit != nil {
-		return entity.Content{}, errCommit
+		return entity.Content{}, false, errCommit
 	}
-	return data, nil
+	return data, isActive, nil
 }
 
 func (r *Repo) GetBanners(ctx context.Context, tagID, featureID, limit, offset uint64) ([]entity.BannersList, error) {

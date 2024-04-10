@@ -31,6 +31,13 @@ CREATE TABLE IF NOT EXISTS banner_tag(
 INSERT INTO feature (created_at, updated_at) VALUES (now(), now());
 INSERT INTO tag (created_at, updated_at) VALUES (now(), now());
 INSERT INTO tag (created_at, updated_at) VALUES (now(), now());
-INSERT INTO banner (title, text, url, feature_id, created_at, updated_at) VALUES ('some_title', 'some_text', 'some_url', 1, now(), now());
-INSERT INTO banner_tag (banner_id, tag_id) VALUES (1, (1));
-INSERT INTO banner_tag (banner_id, tag_id) VALUES (1, (2));
+INSERT INTO banner (title, text, url, feature_id, is_active, created_at, updated_at) VALUES ('some_title', 'some_text', 'some_url', 1, true, now(), now());
+INSERT INTO banner_tag (banner_id, tag_id) VALUES (1, 1);
+INSERT INTO banner_tag (banner_id, tag_id) VALUES (1, 2);
+
+INSERT INTO feature (created_at, updated_at) VALUES (now(), now());
+INSERT INTO tag (created_at, updated_at) VALUES (now(), now());
+INSERT INTO tag (created_at, updated_at) VALUES (now(), now());
+INSERT INTO banner (title, text, url, feature_id, is_active, created_at, updated_at) VALUES ('some_title', 'some_text', 'some_url', 2, false, now(), now());
+INSERT INTO banner_tag (banner_id, tag_id) VALUES (2, 3);
+INSERT INTO banner_tag (banner_id, tag_id) VALUES (2, 4);

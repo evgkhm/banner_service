@@ -61,7 +61,7 @@ func TestGetUserBanner(t *testing.T) {
 
 	httpserver.New(handler, httpserver.Port(cfg.HTTP.Port))
 
-	t.Run("Баннер пользователя", func(t *testing.T) {
+	t.Run("Баннер пользователя для админа", func(t *testing.T) {
 		t.Parallel()
 		requestContent := entity.Content{
 			Title: "some_title",
@@ -78,7 +78,8 @@ func TestGetUserBanner(t *testing.T) {
 		require.NoError(t, err)
 		require.NotZero(t, createBanner)
 
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080/user_banner?tag_id=1&feature_id=1&use_last_revision=false", http.NoBody)
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet,
+			"http://localhost:8080/user_banner?tag_id=1&feature_id=1&use_last_revision=false", http.NoBody)
 		require.NoError(t, err)
 		req.Header.Set("token", os.Getenv("API_TOKEN"))
 		resp, err := http.DefaultClient.Do(req)
@@ -87,9 +88,72 @@ func TestGetUserBanner(t *testing.T) {
 
 		require.Equal(t, http.StatusOK, resp.StatusCode)
 
-		expectedBanner, err := useCase.GetUserBanner(ctx, requestForCreate.TagID[0], requestForCreate.FeatureID, true)
+		expectedBanner, err := useCase.GetUserBanner(ctx, requestForCreate.TagID[0], requestForCreate.FeatureID, true, false)
 		require.NoError(t, err)
+		require.Equal(t, expectedBanner, requestContent)
+	})
 
+	t.Run("Баннер пользователя для юзера с активным баннером", func(t *testing.T) {
+		t.Parallel()
+		requestContent := entity.Content{
+			Title: "some_title",
+			Text:  "some_text",
+			URL:   "some_url",
+		}
+		var requestForCreate = entity.Banner{
+			TagID:     []uint64{1},
+			FeatureID: 1,
+			Content:   requestContent,
+			IsActive:  true,
+		}
+		createBanner, err := repo.CreateBanner(ctx, &requestForCreate)
+		require.NoError(t, err)
+		require.NotZero(t, createBanner)
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet,
+			"http://localhost:8080/user_banner?tag_id=1&feature_id=1&use_last_revision=false", http.NoBody)
+		require.NoError(t, err)
+		req.Header.Set("token", os.Getenv("API_TOKEN"))
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		t.Cleanup(func() { _ = resp.Body.Close() })
+
+		require.Equal(t, http.StatusOK, resp.StatusCode)
+
+		expectedBanner, err := useCase.GetUserBanner(ctx, requestForCreate.TagID[0], requestForCreate.FeatureID, true, true)
+		require.NoError(t, err)
+		require.Equal(t, expectedBanner, requestContent)
+	})
+
+	t.Run("Баннер пользователя для юзера с неактивным баннером", func(t *testing.T) {
+		t.Parallel()
+		requestContent := entity.Content{
+			Title: "some_title",
+			Text:  "some_text",
+			URL:   "some_url",
+		}
+		var requestForCreate = entity.Banner{
+			TagID:     []uint64{1},
+			FeatureID: 1,
+			Content:   requestContent,
+			IsActive:  false,
+		}
+		createBanner, err := repo.CreateBanner(ctx, &requestForCreate)
+		require.NoError(t, err)
+		require.NotZero(t, createBanner)
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet,
+			"http://localhost:8080/user_banner?tag_id=1&feature_id=1&use_last_revision=false", http.NoBody)
+		require.NoError(t, err)
+		req.Header.Set("token", os.Getenv("API_TOKEN"))
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		t.Cleanup(func() { _ = resp.Body.Close() })
+
+		require.Equal(t, http.StatusOK, resp.StatusCode)
+
+		expectedBanner, err := useCase.GetUserBanner(ctx, requestForCreate.TagID[0], requestForCreate.FeatureID, true, true)
+		require.NoError(t, err)
 		require.Equal(t, expectedBanner, requestContent)
 	})
 
@@ -141,7 +205,8 @@ func TestGetUserBanner(t *testing.T) {
 		require.NoError(t, err)
 		require.NotZero(t, createBanner)
 
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080/user_banner?tag_id=1&feature_id=1&use_last_revision=false", http.NoBody)
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet,
+			"http://localhost:8080/user_banner?tag_id=1&feature_id=1&use_last_revision=false", http.NoBody)
 		require.NoError(t, err)
 
 		req.Header.Set("token", "user_token_not_right")
@@ -171,7 +236,8 @@ func TestGetUserBanner(t *testing.T) {
 		require.NoError(t, err)
 		require.NotZero(t, createBanner)
 
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080/user_banner?tag_id=10000&feature_id=10000&use_last_revision=true", http.NoBody)
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet,
+			"http://localhost:8080/user_banner?tag_id=10000&feature_id=10000&use_last_revision=true", http.NoBody)
 		require.NoError(t, err)
 
 		req.Header.Set("token", os.Getenv("API_TOKEN"))

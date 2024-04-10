@@ -7,6 +7,7 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"os"
 	"strconv"
 )
 
@@ -32,7 +33,14 @@ func (h *Handler) getUserBanner(ctx *gin.Context) {
 		return
 	}
 
-	userBannerResponse, errGetUserBanner := h.usecase.GetUserBanner(ctx, tagID, featureID, useLastVerson)
+	var isUserRequest bool
+	token := ctx.GetHeader("token")
+	requiredUserToken := os.Getenv("API_USER_TOKEN")
+	if token == requiredUserToken {
+		isUserRequest = true
+	}
+
+	userBannerResponse, errGetUserBanner := h.usecase.GetUserBanner(ctx, tagID, featureID, useLastVerson, isUserRequest)
 	if errGetUserBanner != nil {
 		if errors.Is(errGetUserBanner, postgres.ErrUserBanner) {
 			writeErrorResponse(ctx, http.StatusNotFound, errGetUserBanner.Error())
