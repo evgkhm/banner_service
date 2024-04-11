@@ -212,6 +212,24 @@ func (r *Repo) UpdateBanner(ctx context.Context, bannerID uint64, banner *entity
 		return err
 	}
 
+	// select banner and check if it exists
+	q := `SELECT id FROM banner WHERE id = $1`
+	errSelect := tr.QueryRowContext(ctx, q, bannerID).Scan(&bannerID)
+	if errSelect != nil {
+		if errors.Is(errSelect, sql.ErrNoRows) {
+			errRollBack := tr.Rollback()
+			if errRollBack != nil {
+				return errRollBack
+			}
+			return ErrUserBanner
+		}
+		errRollBack := tr.Rollback()
+		if errRollBack != nil {
+			return errRollBack
+		}
+		return errSelect
+	}
+
 	updateFeature := `UPDATE "feature" SET id = $1, created_at = $2, updated_at = $3 WHERE id = 
 		(SELECT feature_id FROM banner WHERE id = $4)`
 	_, errExec := tr.ExecContext(ctx, updateFeature, banner.FeatureID, now, now, bannerID)
@@ -292,6 +310,24 @@ func (r *Repo) DeleteBanner(ctx context.Context, bannerID uint64) error {
 	tr, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
+	}
+
+	// select banner and check if it exists
+	q := `SELECT id FROM banner WHERE id = $1`
+	errSelect := tr.QueryRowContext(ctx, q, bannerID).Scan(&bannerID)
+	if errSelect != nil {
+		if errors.Is(errSelect, sql.ErrNoRows) {
+			errRollBack := tr.Rollback()
+			if errRollBack != nil {
+				return errRollBack
+			}
+			return ErrUserBanner
+		}
+		errRollBack := tr.Rollback()
+		if errRollBack != nil {
+			return errRollBack
+		}
+		return errSelect
 	}
 
 	deleteBannerTags := `DELETE from banner_tag WHERE banner_id = $1`
