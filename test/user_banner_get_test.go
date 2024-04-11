@@ -11,9 +11,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/caarlos0/env/v6"
+	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/require"
-	"log"
 	"net/http"
 	"os"
 	"regexp"
@@ -41,19 +41,24 @@ func TestGetUserBanner(t *testing.T) {
 	if err := env.Parse(cfg); err != nil {
 		t.Errorf("failed to parse config from environment variables: %v", err)
 	}
-	cfg.PG.URL = fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s",
-		cfg.PG.User, cfg.PG.Password, cfg.PG.Host, cfg.PG.Port, cfg.PG.DB, cfg.PG.SSLMode)
+	dbURL := fmt.Sprintf("host=%s port=%v user=%s dbname=%s password=%s sslmode=%s",
+		"localhost", 5433, cfg.PG.User, cfg.PG.DB, cfg.PG.Password, cfg.PG.SSLMode)
+
+	dbConn, err := sqlx.Open("postgres", dbURL)
+	if err != nil {
+		t.Errorf("failed to create connection pool: %v", err)
+	}
+	errPing := dbConn.Ping()
+	if errPing != nil {
+		t.Errorf("failed to ping the database: %v", errPing)
+	}
 
 	logger, err := logging.New(cfg.Logger.LogFilePath, cfg.Logger.Level)
 	require.NoError(t, err)
 
 	ctx := context.Background()
-	db, err := postgres.NewDB(ctx, cfg.PG)
-	if err != nil {
-		log.Fatal(err)
-	}
 
-	repo := postgres.New(db)
+	repo := postgres.New(dbConn)
 
 	useCase := usecase.New(repo)
 

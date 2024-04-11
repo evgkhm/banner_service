@@ -4,12 +4,16 @@
 3. `make run`
 
 # Schema
+![Alt-текст](schema.png "Schema")
 
-# For tests
+# Tests
 `make test`
 
-# For start linter
+# Start linter
 `make lint`
+
+# Postman collection
+BANNER.postman_collection
 
 # Examples
 1. Активный баннер пользователя

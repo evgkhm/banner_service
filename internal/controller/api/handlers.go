@@ -164,5 +164,5 @@ func (h *Handler) deleteBanner(ctx *gin.Context) {
 		return
 	}
 	h.logger.Info("Баннер успешно удален")
-	ctx.JSON(http.StatusNoContent, "Баннер успешно удален")
+	writePositiveResponse(ctx, http.StatusNoContent, bannerID)
 }

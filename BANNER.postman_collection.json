@@ -1,0 +1,187 @@
+{
+	"info": {
+		"_postman_id": "a9734ad9-a2a0-4951-81fd-dcef0ed4b73c",
+		"name": "BANNER",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "21564486"
+	},
+	"item": [
+		{
+			"name": "Create banner",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "token",
+						"value": "admin_token",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"tag_ids\": [\n    5, 6\n  ],\n  \"feature_id\": 5,\n  \"content\": {\n    \"title\": \"some_title\",\n    \"text\": \"some_text\",\n    \"url\": \"some_url\"\n  },\n  \"is_active\": true\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/banner",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"banner"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get user banners by feature and tag",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "token",
+						"value": "admin_token",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8080/user_banner?tag_id=3&feature_id=2&use_last_revision=true",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"user_banner"
+					],
+					"query": [
+						{
+							"key": "tag_id",
+							"value": "3"
+						},
+						{
+							"key": "feature_id",
+							"value": "2"
+						},
+						{
+							"key": "use_last_revision",
+							"value": "true"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get all banners with filters",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "token",
+						"value": "admin_token",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8080/banner?feature_id=1&tag_id=3&limit=10&offset=0",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"banner"
+					],
+					"query": [
+						{
+							"key": "feature_id",
+							"value": "1"
+						},
+						{
+							"key": "tag_id",
+							"value": "3"
+						},
+						{
+							"key": "limit",
+							"value": "10"
+						},
+						{
+							"key": "offset",
+							"value": "0"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update banner",
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "token",
+						"value": "admin_token",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"tag_ids\": [\n    99, 9\n  ],\n  \"feature_id\": 9,\n  \"content\": {\n    \"title\": \"some_title_new\",\n    \"text\": \"some_text_new\",\n    \"url\": \"some_url_new\"\n  },\n  \"is_active\": true\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/banner/3",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"banner",
+						"3"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete banner",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "token",
+						"value": "admin_token",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8080/banner/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"banner",
+						"1"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
