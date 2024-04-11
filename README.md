@@ -1,7 +1,13 @@
 # Getting started
-1. `git clone https://github.com/evgkhm/banner_service`
-2. `cd banner_service`
-3. `make run`
+```
+git clone https://github.com/evgkhm/banner_service
+```
+```
+cd banner_service
+```
+```
+make run
+```
 
 # Schema
 ![Alt-текст](schema.png "Schema")
